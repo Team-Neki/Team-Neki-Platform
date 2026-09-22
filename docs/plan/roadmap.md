@@ -1,6 +1,6 @@
 # Roadmap
 
-Team-Neki-Log에서 진행해야 할 작업을 명시적으로 기록한다. 새 작업이 생기거나 상태가 바뀌면 본 문서를 갱신한다.
+Team-Neki-Platform에서 진행해야 할 작업을 명시적으로 기록한다. 새 작업이 생기거나 상태가 바뀌면 본 문서를 갱신한다.
 
 ## Status
 
@@ -17,7 +17,7 @@ Team-Neki-Log에서 진행해야 할 작업을 명시적으로 기록한다. 새
 - [x] HLD 작성 — aggregation 토픽 시스템 구조
 - [x] LLD 작성 — API contract / 스키마 / IaC 명세
 - [x] aggregation 구현 — Lambda handler, JSON Schema, 테스트, Terraform IaC
-- [x] PR #1 OPEN ([링크](https://github.com/Team-Neki/Team-Neki-Log/pull/1))
+- [x] PR #1 OPEN ([링크](https://github.com/Team-Neki/Team-Neki-Platform/pull/1))
 
 ---
 

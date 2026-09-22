@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Team-Neki-Log의 **aggregation** 토픽은 네키 앱 도메인의 **일간 집계 데이터를 수신·저장**하는 책임을 가진다. 외부 Producer(GitHub Actions cron 등)가 매일 정규화된 JSON 페이로드를 HTTPS로 전송하면, 본 시스템이 검증 후 S3에 영구 저장한다. 저장된 데이터는 별도 분석 모듈/레포가 소비한다.
+Team-Neki-Platform의 **aggregation** 토픽은 네키 앱 도메인의 **일간 집계 데이터를 수신·저장**하는 책임을 가진다. 외부 Producer(GitHub Actions cron 등)가 매일 정규화된 JSON 페이로드를 HTTPS로 전송하면, 본 시스템이 검증 후 S3에 영구 저장한다. 저장된 데이터는 별도 분석 모듈/레포가 소비한다.
 
 상세 의사결정 배경은 [ADR-0001](../adr/0001-aggregation-storage-on-s3.md) 참조.
 
@@ -81,7 +81,7 @@ sequenceDiagram
 ## 4. Components
 
 ### 4.1 Producer (외부, 참고)
-- **위치**: Team-Neki-Log 책임 영역 밖. 별도 레포/시스템이 호출자
+- **위치**: Team-Neki-Platform 책임 영역 밖. 별도 레포/시스템이 호출자
 - **책임**: 일정에 따라 집계 데이터를 정규화 JSON으로 본 시스템에 POST
 - **현재 1차 Producer**: GitHub Actions cron + Python 스크립트 (GA4 호출 후 POST)
 - **입력**: 시간 트리거 (cron)

@@ -1,12 +1,12 @@
 # AGENTS.md
 
-이 파일은 AI 에이전트(Claude Code, Codex, 기타)가 Team-Neki-Log 레포에서 작업할 때 따라야 할 규칙이다. **CLAUDE.md는 이 파일의 심볼릭 링크다 — 이 파일만 수정한다.**
+이 파일은 AI 에이전트(Claude Code, Codex, 기타)가 Team-Neki-Platform 레포에서 작업할 때 따라야 할 규칙이다. **CLAUDE.md는 이 파일의 심볼릭 링크다 — 이 파일만 수정한다.**
 
 명령형으로 적혀 있다. 지키지 않을 합리적 사유가 있으면 PR 본문에 명시한다.
 
 ## 1. Repo 한 줄 요약
 
-Team-Neki-Log는 네키 앱 도메인의 **일간 집계 데이터를 생성·수신·저장**하는 시스템이다. Producer(GitHub Actions cron + Python) → API Gateway → Lambda → S3. Terraform IaC. Python 3.13. 단일 AWS 계정, 단일 리전(ap-northeast-2), 단일 환경(prod). 분석/조회/시각화는 **명시적 non-goal**이고 별도 모듈이 처리한다.
+Team-Neki-Platform는 네키 앱 도메인의 **일간 집계 데이터를 생성·수신·저장**하는 시스템이다. Producer(GitHub Actions cron + Python) → API Gateway → Lambda → S3. Terraform IaC. Python 3.13. 단일 AWS 계정, 단일 리전(ap-northeast-2), 단일 환경(prod). 분석/조회/시각화는 **명시적 non-goal**이고 별도 모듈이 처리한다.
 
 상세 배경: `docs/adr/0001-aggregation-storage-on-s3.md` (저장 아키텍처), `docs/adr/0003-producer-in-repo.md` (Producer 책임 위치).
 
@@ -58,6 +58,13 @@ LLD/HLD가 실제와 어긋난다면, 같은 PR에서 문서를 함께 갱신한
 | **topic** | 데이터 책임 단위(`aggregation`, `raw`). scope/디렉토리/IAM prefix 모두 이 단위로 정렬 |
 
 리소스 네이밍은 항상 `team-neki-log-<topic>-production-<role>`. 버킷만 예외 (`team-neki-log-production`, 토픽 공유).
+
+**접두사가 `team-neki-log-`인 것은 오타가 아니다.** 저장소는 Team-Neki-Platform 으로
+이름이 바뀌었지만 AWS 리소스 이름은 그대로 둔다. 이름을 맞추려고 바꾸면 rename 이
+아니라 재생성이다. 버킷 이름은 변경 자체가 불가능하고, 그 버킷은 집계 데이터와
+Terraform state 를 같이 담고 있어 destroy 대상이 되면 자기 state 를 지우게 된다.
+Lambda, IAM role, 로그 그룹도 이름을 바꾸면 교체된다. 옮기려면 신규 버킷 생성 +
+데이터 복사 + state 마이그레이션을 따로 계획해야 한다.
 
 ## 5. 트래픽/운영 패턴 (이 가정 위에서 결정됨)
 

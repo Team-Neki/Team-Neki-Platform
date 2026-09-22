@@ -362,7 +362,7 @@ Stage:       $default
 
 ## 9. IaC Module Structure
 
-Terraform 기반. `Team-Neki-Log/aggregation/` 하위:
+Terraform 기반. `Team-Neki-Platform/aggregation/` 하위:
 
 ```
 aggregation/
@@ -548,5 +548,5 @@ Terraform이 처리할 수 없는 항목. 별도 README에 상세 절차 기술 
 ## 10. References
 - [ADR-0001: Aggregation Storage on S3](../adr/0001-aggregation-storage-on-s3.md)
 - [HLD: Aggregation](./hld.md)
-- 코드: `Team-Neki-Log/aggregation/src/`
-- 스키마: `Team-Neki-Log/aggregation/src/schemas/ga4-daily-report.v1.json`
+- 코드: `Team-Neki-Platform/aggregation/src/`
+- 스키마: `Team-Neki-Platform/aggregation/src/schemas/ga4-daily-report.v1.json`

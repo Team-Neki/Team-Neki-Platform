@@ -1,6 +1,6 @@
 # Commit Convention
 
-Team-Neki-Log의 git commit 메시지 규칙. 신규/외부 기여자 모두 이 문서 한 장으로 작성 가능해야 한다.
+Team-Neki-Platform의 git commit 메시지 규칙. 신규/외부 기여자 모두 이 문서 한 장으로 작성 가능해야 한다.
 
 ## 1. 기본 포맷
 
