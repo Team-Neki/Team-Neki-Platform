@@ -25,6 +25,7 @@ S3  team-neki-log-production
 ## 레포 구조
 
 토픽 기반 디렉토리. `aggregation`은 현재 유일한 토픽이며, 향후 `raw` 등 추가 시 같은 레벨에 형제로 둔다.
+`infra`는 토픽이 아니라 계정 단위 공통 리소스 자리다. Terraform state를 토픽과 나눠 쓴다.
 
 ```
 .
@@ -33,6 +34,7 @@ S3  team-neki-log-production
 │   ├── tests/                   # pytest
 │   ├── infra/                   # Terraform
 │   └── README.md                # 컴포넌트 셋업·배포 절차
+├── infra/                       # 토픽에 속하지 않는 계정 단위 리소스 (IAM)
 ├── docs/
 │   ├── adr/                     # 의사결정 기록 (최상위 권위)
 │   ├── aggregation/             # 토픽별 HLD / LLD
