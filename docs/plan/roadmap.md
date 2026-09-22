@@ -91,11 +91,16 @@ GA4 일간 리포트 GitHub Actions에서 본 endpoint 호출 추가. (Producer�
 - [x] `aggregation/infra/main.tf`의 `backend "s3"` 블록 주석 해제
 - [x] `terraform init -migrate-state` 실행
 - [x] state가 `s3://team-neki-log-production/terraform/state/aggregation.tfstate`에 존재 확인
-- [ ] 로컬 `terraform.tfstate*` 백업 후 삭제
+- [x] 로컬 `terraform.tfstate*` 백업 후 삭제
 
-로컬 파일은 아직 남아 있다. `terraform.tfstate` 는 마이그레이션으로 비워져 0 바이트이고,
-`terraform.tfstate.backup` 은 이전 상태(serial 15)를 담은 유일한 사본이다. gitignore 대상이라
-커밋되지는 않는다. 지우기 전에 별도 보관 위치를 정해야 해서 남겨둔다.
+마이그레이션 이전 상태(serial 15)는 `~/Downloads/aws-cleanup-backup-2026-09-23/aggregation-pre-migration.tfstate.bak`
+으로 옮겼고, 비어 있던 `terraform.tfstate`(0 바이트)는 지웠다. 이제 저장소에도 워크스페이스
+어디에도 로컬 state 파일이 없다.
+
+**로컬 state 파일을 남겨두지 않는다.** 백엔드가 S3 이면 Terraform 이 로컬 파일을 보지
+않으므로 있어도 동작에 영향은 없지만, 백엔드 설정이 없는 저장소에서는 그 파일이 정본이
+된다. 실제로 Server 저장소가 그 상태였고 `destroy` 한 번이면 운영 버킷이 사라지는
+구조였다 (BACKEND-136).
 
 **Exit criteria**: state가 S3에 있고 다른 환경에서도 `terraform init`으로 state 공유 가능. 충족됨.
 
