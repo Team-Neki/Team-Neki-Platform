@@ -38,6 +38,10 @@ apply 가 설정을 새로 거는 변경이 된다. 없는 것을 없다고 쓰�
 `aggregation/infra` 가 관리하는 `team-neki-log-production` 은 여기 없다. 그쪽
 state 소관이다.
 
+버킷을 더 가져올 때는 `import` 블록을 임시로 두고 `plan` 이 `0 to change` 인지
+본 뒤 apply 하고, 끝나면 블록을 지운다. 블록을 남겨두면 이미 끝난 일이 아직
+남은 일처럼 보인다.
+
 ## 왜 역할을 여기서 만드는가
 
 전송 스트림을 만들려면 역할을 Firehose 에 넘겨야 한다(`iam:PassRole`). 역할 생성까지
