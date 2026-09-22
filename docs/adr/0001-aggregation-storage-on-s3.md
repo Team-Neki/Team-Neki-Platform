@@ -9,7 +9,7 @@ Accepted (2026-05-26)
 
 ## Context and Problem Statement
 
-Team-Neki-Log는 네키 앱 도메인의 **일간 집계 데이터**(GA4 일간 리포트 등)를 수신·저장하는 책임을 가진다. 현재는 GitHub Actions cron이 매일 KST 10시에 GA4 데이터를 조회해 Discord로만 전송 중이며, 이 데이터를 영구 저장 가능한 형태로 보관할 필요가 발생했다.
+Team-Neki-Platform는 네키 앱 도메인의 **일간 집계 데이터**(GA4 일간 리포트 등)를 수신·저장하는 책임을 가진다. 현재는 GitHub Actions cron이 매일 KST 10시에 GA4 데이터를 조회해 Discord로만 전송 중이며, 이 데이터를 영구 저장 가능한 형태로 보관할 필요가 발생했다.
 
 본 ADR은 **일간 집계 데이터를 어떤 저장소에, 어떤 구조로, 어떤 파이프라인으로 보관할지** 결정한다.
 

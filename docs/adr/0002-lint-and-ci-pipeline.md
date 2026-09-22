@@ -5,7 +5,7 @@ Accepted (2026-05-26)
 
 ## Context and Problem Statement
 
-Team-Neki-Log는 단일 운영자(AGENTS.md §5)가 관리하는 작은 레포지만, **AI 에이전트(Claude Code, Codex 등)도 1급 기여자**로 가정한다(AGENTS.md 1줄 요약). 이 가정 위에서 다음 두 가지가 동시에 사실이다.
+Team-Neki-Platform는 단일 운영자(AGENTS.md §5)가 관리하는 작은 레포지만, **AI 에이전트(Claude Code, Codex 등)도 1급 기여자**로 가정한다(AGENTS.md 1줄 요약). 이 가정 위에서 다음 두 가지가 동시에 사실이다.
 
 1. **머지 게이트가 없다.** PR 시점에 컨벤션·테스트 위반을 잡아주는 자동 검증이 없어, AGENTS.md §7의 "테스트 통과" 항목이 사람 검토에만 의존한다.
 2. **AGENTS.md §3의 "코드 스타일" 항목이 TBD다.** 어떤 도구를 사용할지 결정한 적이 없어, 에이전트마다 다른 스타일을 만들 위험이 있다.

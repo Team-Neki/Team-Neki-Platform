@@ -1,4 +1,4 @@
-# Team-Neki-Log
+# Team-Neki-Platform
 
 네키 앱 도메인의 **일간 집계 데이터를 수신·저장**하는 시스템.
 GitHub Actions cron이 매일 KST 10시에 GA4 일간 리포트를 정규화 JSON으로 POST 하면, API Gateway → Lambda → S3 경로로 영구 저장한다.
