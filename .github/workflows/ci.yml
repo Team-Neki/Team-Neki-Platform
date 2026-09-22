@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "aggregation/**"
+      - "infra/**"
       - "scripts/**"
       - "pyproject.toml"
       - ".github/workflows/ci.yml"
@@ -11,6 +12,7 @@ on:
     branches: [main]
     paths:
       - "aggregation/**"
+      - "infra/**"
       - "scripts/**"
       - "pyproject.toml"
       - ".github/workflows/ci.yml"
@@ -54,11 +56,18 @@ jobs:
         run: pytest
 
   terraform:
-    name: terraform (fmt + validate)
+    # 루트 모듈이 늘면 여기에 더한다. 빠뜨리면 그 모듈만 조용히 검사되지 않는다.
+    name: terraform (${{ matrix.module }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - aggregation/infra
+          - infra
     defaults:
       run:
-        working-directory: aggregation/infra
+        working-directory: ${{ matrix.module }}
     steps:
       - uses: actions/checkout@v4
 
