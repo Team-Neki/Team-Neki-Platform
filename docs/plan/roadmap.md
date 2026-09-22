@@ -84,16 +84,20 @@ GA4 일간 리포트 GitHub Actions에서 본 endpoint 호출 추가. (Producer�
 
 ---
 
-## Phase 5. Terraform state S3 마이그레이션 (선택)
+## Phase 5. Terraform state S3 마이그레이션 (선택) — 2026-06-09 완료
 
-초기 배포는 local state. 안정 운영 확인 후 S3로 이동.
+초기 배포는 local state 였고 S3 로 옮겼다. 지금 `aggregation/infra` 의 정본 state 는 S3 에 있다.
 
-- [ ] `aggregation/infra/main.tf`의 `backend "s3"` 블록 주석 해제
-- [ ] `terraform init -migrate-state` 실행
-- [ ] state가 `s3://team-neki-log-production/terraform/state/aggregation.tfstate`에 존재 확인
+- [x] `aggregation/infra/main.tf`의 `backend "s3"` 블록 주석 해제
+- [x] `terraform init -migrate-state` 실행
+- [x] state가 `s3://team-neki-log-production/terraform/state/aggregation.tfstate`에 존재 확인
 - [ ] 로컬 `terraform.tfstate*` 백업 후 삭제
 
-**Exit criteria**: state가 S3에 있고 다른 환경에서도 `terraform init`으로 state 공유 가능.
+로컬 파일은 아직 남아 있다. `terraform.tfstate` 는 마이그레이션으로 비워져 0 바이트이고,
+`terraform.tfstate.backup` 은 이전 상태(serial 15)를 담은 유일한 사본이다. gitignore 대상이라
+커밋되지는 않는다. 지우기 전에 별도 보관 위치를 정해야 해서 남겨둔다.
+
+**Exit criteria**: state가 S3에 있고 다른 환경에서도 `terraform init`으로 state 공유 가능. 충족됨.
 
 ---
 
