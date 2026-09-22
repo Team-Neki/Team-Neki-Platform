@@ -14,6 +14,30 @@
 
 전송 스트림 자체는 만들지 않는다. 여기서 주는 것은 **구성할 수 있는 권한**까지다.
 
+### S3 버킷
+
+계정의 버킷 5개를 가져와 관리한다. 전부 콘솔이나 다른 레포에서 만들어진 것이고
+신규 생성이 아니다.
+
+| 버킷 | 쓰는 곳 |
+|---|---|
+| `yapp-neki-ap-northeast-2` | Server prod 미디어 |
+| `yapp-neki-staging-ap-northeast-2` | Server staging 미디어 |
+| `staging-team-neki-workflow` | Workflow 수집 적재 (staging) |
+| `prod-team-neki-workflow` | Workflow 수집 적재 (prod) |
+| `team-neki-sprint` | Sprint 앱 첨부 |
+
+**설정은 실물과 한 글자도 달라서는 안 된다.** 다르면 apply 가 운영 버킷의 설정을
+바꾼다. `plan` 이 `0 to change` 가 아니면 코드가 틀린 것이지 실물이 틀린 것이
+아니다. 실제로 `bucket_key_enabled` 를 빠뜨렸다가 버킷 4개의 설정을 끌 뻔했다.
+
+버저닝은 일부러 선언하지 않는다. 실물이 미설정 상태라 `Disabled` 로 선언하면
+apply 가 설정을 새로 거는 변경이 된다. 없는 것을 없다고 쓰는 방법이 Terraform 에
+없다.
+
+`aggregation/infra` 가 관리하는 `team-neki-log-production` 은 여기 없다. 그쪽
+state 소관이다.
+
 ## 왜 역할을 여기서 만드는가
 
 전송 스트림을 만들려면 역할을 Firehose 에 넘겨야 한다(`iam:PassRole`). 역할 생성까지
