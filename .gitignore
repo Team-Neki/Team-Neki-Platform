@@ -7,6 +7,11 @@
 !*.tfvars.example
 crash.log
 
+# Local env (secrets — never commit. .env.example만 추적)
+.env
+.env.*
+!.env.example
+
 # Python
 __pycache__/
 *.py[cod]
