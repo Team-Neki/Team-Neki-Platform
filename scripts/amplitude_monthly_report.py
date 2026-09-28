@@ -61,6 +61,15 @@ def query(start, end, event_type, metric="uniques", group_by=None):
     return sum(series[0]) if series and series[0] else 0
 
 
+def format_change(current, previous):
+    """전달 대비 증감률을 '(▲12.3%)' 형태로 만든다. 전달 값이 0이면 계산이 무의미하므로 생략."""
+    if previous == 0:
+        return " (신규)" if current > 0 else ""
+    change = (current - previous) / previous * 100
+    arrow = "▲" if change > 0 else ("▼" if change < 0 else "▬")
+    return f" ({arrow}{abs(round(change, 1))}%)"
+
+
 def main():
     pretend_today = os.environ.get("PRETEND_TODAY")
     today = datetime.date.fromisoformat(pretend_today) if pretend_today else datetime.date.today()
@@ -71,8 +80,17 @@ def main():
     end = last_day_of_prev_month.strftime("%Y%m%d")
     period_display = f"{first_day_of_prev_month.year}년 {first_day_of_prev_month.month}월"
 
+    prev_last_day = first_day_of_prev_month - datetime.timedelta(days=1)
+    prev_first_day = prev_last_day.replace(day=1)
+    prev_start = prev_first_day.strftime("%Y%m%d")
+    prev_end = prev_last_day.strftime("%Y%m%d")
+
     mau = query(start, end, "_active", metric="uniques")
+    mau_prev = query(prev_start, prev_end, "_active", metric="uniques")
     new_users = query(start, end, "[Amplitude] Application Installed", metric="totals")
+    new_users_prev = query(
+        prev_start, prev_end, "[Amplitude] Application Installed", metric="totals"
+    )
 
     def totals_and_users(event_type):
         return query(start, end, event_type, metric="totals"), query(
@@ -115,9 +133,12 @@ def main():
     mypage_logout = query(start, end, "mypage_logout", metric="totals")
     mypage_withdraw = query(start, end, "mypage_withdraw", metric="totals")
 
+    mau_change = format_change(mau, mau_prev)
+    new_users_change = format_change(new_users, new_users_prev)
+
     lines = [
-        f"📊 **Amplitude 월간 리포트 · {period_display}**",
-        f"👥 MAU **{mau}명**  |  신규(설치) **{new_users}명**  |  🔔 알림 재유입 **{notification_click}회**",
+        f"### 📆 Amplitude 월간 리포트 · {period_display}",
+        f"👥 MAU **{mau}명**{mau_change}  |  신규(설치) **{new_users}명**{new_users_change}  |  🔔 알림 재유입 **{notification_click}회**",
         f"↩️ 로그아웃 **{mypage_logout}회**  |  ⚠️ 탈퇴 **{mypage_withdraw}회**",
         "",
         "### 지도",
@@ -146,7 +167,7 @@ def main():
     ]
 
     payload = {
-        "username": "네키 Amplitude 봇",
+        "username": "네키 Amplitude 월간봇",
         "avatar_url": "https://i.ifh.cc/PbdkGM.jpg",
         "content": "\n".join(lines),
     }
