@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 1 1 * *'  # 매월 1일 10:00 KST
   workflow_dispatch:
+    inputs:
+      pretend_today:
+        description: '테스트용 기준일 override (YYYY-MM-DD, 비우면 실제 오늘 날짜)'
+        required: false
 
 jobs:
   report:
@@ -24,4 +28,5 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.AMPLITUDE_DISCORD_WEBHOOK_URL }}
           AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
           AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
+          PRETEND_TODAY: ${{ inputs.pretend_today }}
         run: python scripts/amplitude_monthly_report.py

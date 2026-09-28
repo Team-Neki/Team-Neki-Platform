@@ -61,7 +61,8 @@ def query(start, end, event_type, metric="uniques", group_by=None):
 
 
 def main():
-    today = datetime.date.today()
+    pretend_today = os.environ.get("PRETEND_TODAY")
+    today = datetime.date.fromisoformat(pretend_today) if pretend_today else datetime.date.today()
     last_sunday = today - datetime.timedelta(days=today.weekday() + 1)
     last_monday = last_sunday - datetime.timedelta(days=6)
 
