@@ -8,6 +8,11 @@ on:
       pretend_today:
         description: '테스트용 기준일 override (YYYY-MM-DD, 비우면 실제 오늘 날짜)'
         required: false
+      dry_run:
+        description: '체크하면 디스코드 전송 없이 로그에만 내용을 출력'
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   report:
@@ -29,4 +34,5 @@ jobs:
           AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
           AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
           PRETEND_TODAY: ${{ inputs.pretend_today }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: python scripts/amplitude_weekly_report.py

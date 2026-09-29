@@ -134,7 +134,7 @@ def main():
     new_users_change = format_change(new_users, new_users_prev)
 
     lines = [
-        f"### 🗓️ Amplitude 주간 리포트 · {period_display}",
+        f"## 🗓️ Amplitude 주간 리포트 · {period_display}",
         f"👥 WAU **{wau}명**{wau_change}  |  신규(설치) **{new_users}명**{new_users_change}  |  🔔 알림 재유입 **{notification_click}회**",
         f"↩️ 로그아웃 **{mypage_logout}회**  |  ⚠️ 탈퇴 **{mypage_withdraw}회**",
         "",
@@ -168,6 +168,14 @@ def main():
         "avatar_url": "https://i.ifh.cc/PbdkGM.jpg",
         "content": "\n".join(lines),
     }
+
+    print("--- 전송 내용 ---")
+    print(payload["content"])
+    print("-----------------")
+
+    if os.environ.get("DRY_RUN"):
+        print(f"DRY_RUN: 전송 생략 / {period_display}")
+        return
 
     resp = requests.post(DISCORD_WEBHOOK_URL, json=payload)
     resp.raise_for_status()
