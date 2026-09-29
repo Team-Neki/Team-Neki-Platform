@@ -137,7 +137,7 @@ def main():
     new_users_change = format_change(new_users, new_users_prev)
 
     lines = [
-        f"### 📆 Amplitude 월간 리포트 · {period_display}",
+        f"## 📆 Amplitude 월간 리포트 · {period_display}",
         f"👥 MAU **{mau}명**{mau_change}  |  신규(설치) **{new_users}명**{new_users_change}  |  🔔 알림 재유입 **{notification_click}회**",
         f"↩️ 로그아웃 **{mypage_logout}회**  |  ⚠️ 탈퇴 **{mypage_withdraw}회**",
         "",
