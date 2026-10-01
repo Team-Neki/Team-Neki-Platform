@@ -1,0 +1,48 @@
+name: _tmp Amplitude Event Audit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: List all event types and last-week totals
+        env:
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
+        run: |
+          python - <<'PYEOF'
+          import datetime
+          import json
+          import os
+
+          import requests
+
+          API_KEY = os.environ["AMPLITUDE_API_KEY"]
+          SECRET_KEY = os.environ["AMPLITUDE_SECRET_KEY"]
+          AUTH = (API_KEY, SECRET_KEY)
+
+          today = datetime.date.today()
+          last_sunday = today - datetime.timedelta(days=today.weekday() + 1)
+          last_monday = last_sunday - datetime.timedelta(days=6)
+          start = last_monday.strftime("%Y%m%d")
+          end = last_sunday.strftime("%Y%m%d")
+          print(f"기간: {last_monday} ~ {last_sunday}")
+
+          resp = requests.get(
+              "https://amplitude.com/api/2/taxonomy/event",
+              auth=AUTH,
+              timeout=15,
+          )
+          print(f"taxonomy/event status: {resp.status_code}")
+          print(resp.text[:3000])
+          PYEOF
