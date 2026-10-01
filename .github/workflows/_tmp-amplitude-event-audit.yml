@@ -24,6 +24,7 @@ jobs:
           import datetime
           import json
           import os
+          import time
 
           import requests
 
@@ -43,6 +44,35 @@ jobs:
               auth=AUTH,
               timeout=15,
           )
-          print(f"taxonomy/event status: {resp.status_code}")
-          print(resp.text[:3000])
+          resp.raise_for_status()
+          events = resp.json()["data"]
+          event_types = sorted({e["event_type"] for e in events if e.get("is_active") and not e.get("deleted")})
+          print(f"조회 대상 이벤트 수: {len(event_types)}")
+
+          results = []
+          for event_type in event_types:
+              params = {
+                  "e": json.dumps({"event_type": event_type}),
+                  "start": start,
+                  "end": end,
+                  "m": "totals",
+              }
+              r = requests.get(
+                  "https://amplitude.com/api/2/events/segmentation",
+                  params=params,
+                  auth=AUTH,
+                  timeout=15,
+              )
+              if r.status_code == 400:
+                  results.append((event_type, 0))
+                  continue
+              r.raise_for_status()
+              series = r.json()["data"].get("series", [[0]])
+              total = sum(series[0]) if series and series[0] else 0
+              results.append((event_type, total))
+              time.sleep(0.2)
+
+          print("--- 이벤트별 지난주 합계 (totals) ---")
+          for event_type, total in sorted(results, key=lambda x: x[1], reverse=True):
+              print(f"{event_type}: {total}")
           PYEOF
