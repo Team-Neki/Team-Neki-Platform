@@ -35,6 +35,11 @@
 apply 가 설정을 새로 거는 변경이 된다. 없는 것을 없다고 쓰는 방법이 Terraform 에
 없다.
 
+lifecycle 은 미디어 버킷 두 개에만 있다. Server 가 `qr-dumps/` 에 올리는 QR 파싱
+실패 HTML 덤프를 30일 뒤 지운다(BACKEND-167). 이 리소스가 버킷의 lifecycle 설정
+전체를 소유하므로, 규칙은 콘솔이 아니라 `s3.tf` 에 rule 블록으로 더한다. 콘솔에서
+더한 규칙은 다음 apply 가 지운다.
+
 `aggregation/infra` 가 관리하는 `team-neki-log-production` 은 여기 없다. 그쪽
 state 소관이다.
 
