@@ -20,8 +20,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-# 전송 역할은 infra 루트 모듈이 만든다 (BACKEND-125). 여기서는 이름으로 찾아 쓰기만 한다.
-# infra state 를 remote_state 로 읽지 않는 것은 state 사이에 순서 의존을 만들지 않기 위해서다.
-data "aws_iam_role" "firehose_delivery" {
-  name = var.delivery_role_name
-}
+# 전송 역할은 infra 루트 모듈이 만든다. 여기서는 이름으로 ARN 을 조합해 쓰기만 한다.
+# remote_state 나 data source 로 읽지 않는 것은 infra 를 적용하기 전에도 plan 이 돌게 하기 위해서다.
+# 대신 apply 는 infra 가 먼저다 (역할이 없으면 스트림 생성이 실패한다).
+data "aws_caller_identity" "current" {}

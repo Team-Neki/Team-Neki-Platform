@@ -1,11 +1,30 @@
-# Firehose 가 맡는 전송 역할.
+# Firehose 가 맡는 전송 역할. 환경마다 하나씩, 자기 버킷의 raw/ 에만 쓴다 (ADR-0004).
 #
 # 이 역할을 yapp 이 아니라 여기서 만드는 것이 핵심이다. 전송 스트림을 만들려면
 # 역할을 Firehose 에 넘겨야 하는데(PassRole), 역할 생성까지 yapp 에 열어주면
 # 임의의 권한을 가진 역할을 만들어 자신에게 넘길 수 있어 권한 상승 통로가 된다.
 # 역할은 관리자가 코드로 만들고, yapp 에게는 "이 역할만 넘길 수 있다" 만 준다.
+locals {
+  firehose_delivery = {
+    production = { role_name = var.delivery_role_name, bucket = var.bucket_name }
+    staging    = { role_name = var.staging_delivery_role_name, bucket = var.staging_bucket_name }
+  }
+}
+
+# 단일 역할이던 시절의 주소. 옮기기만 하고 다시 만들지 않는다.
+moved {
+  from = aws_iam_role.firehose_delivery
+  to   = aws_iam_role.firehose_delivery["production"]
+}
+
+moved {
+  from = aws_iam_role_policy.firehose_delivery
+  to   = aws_iam_role_policy.firehose_delivery["production"]
+}
+
 resource "aws_iam_role" "firehose_delivery" {
-  name = var.delivery_role_name
+  for_each = local.firehose_delivery
+  name     = each.value.role_name
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -26,8 +45,9 @@ resource "aws_iam_role" "firehose_delivery" {
 }
 
 resource "aws_iam_role_policy" "firehose_delivery" {
-  name = "${var.delivery_role_name}-policy"
-  role = aws_iam_role.firehose_delivery.id
+  for_each = local.firehose_delivery
+  name     = "${each.value.role_name}-policy"
+  role     = aws_iam_role.firehose_delivery[each.key].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -40,11 +60,11 @@ resource "aws_iam_role_policy" "firehose_delivery" {
           "s3:ListBucket",
           "s3:ListBucketMultipartUploads",
         ]
-        Resource = "arn:aws:s3:::${var.bucket_name}"
+        Resource = "arn:aws:s3:::${each.value.bucket}"
       },
       {
         # prefix 로 막는다. aggregation/ 은 Lambda 만 쓰는 영역이므로 전송
-        # 역할이 그쪽에 쓰거나 읽지 못해야 한다.
+        # 역할이 그쪽에 쓰거나 읽지 못해야 한다. 다른 환경의 버킷에도 닿지 않는다.
         Sid    = "AllowObjectsUnderPrefix"
         Effect = "Allow"
         Action = [
@@ -52,7 +72,7 @@ resource "aws_iam_role_policy" "firehose_delivery" {
           "s3:GetObject",
           "s3:PutObject",
         ]
-        Resource = "arn:aws:s3:::${var.bucket_name}/${var.firehose_s3_prefix}*"
+        Resource = "arn:aws:s3:::${each.value.bucket}/${var.firehose_s3_prefix}*"
       },
       {
         # 전송 실패 로그. 이게 없으면 Firehose 가 조용히 버리고 원인이 남지 않는다.
@@ -100,12 +120,12 @@ resource "aws_iam_policy" "yapp_firehose" {
         Resource = "*"
       },
       {
-        # 넘길 수 있는 역할을 하나로 못박고, 받는 서비스까지 조건으로 건다.
+        # 넘길 수 있는 역할을 전송 역할로 못박고, 받는 서비스까지 조건으로 건다.
         # 조건이 없으면 이 역할을 EC2 같은 다른 서비스에 넘겨 악용할 수 있다.
         Sid      = "PassDeliveryRoleToFirehoseOnly"
         Effect   = "Allow"
         Action   = ["iam:PassRole"]
-        Resource = aws_iam_role.firehose_delivery.arn
+        Resource = [for role in aws_iam_role.firehose_delivery : role.arn]
         Condition = {
           StringEquals = {
             "iam:PassedToService" = "firehose.amazonaws.com"
@@ -117,7 +137,7 @@ resource "aws_iam_policy" "yapp_firehose" {
         Sid      = "ReadDeliveryRole"
         Effect   = "Allow"
         Action   = ["iam:GetRole"]
-        Resource = aws_iam_role.firehose_delivery.arn
+        Resource = [for role in aws_iam_role.firehose_delivery : role.arn]
       },
       {
         # 전송 실패 로그 그룹을 코드로 만들 수 있어야 한다. 역할이 PutLogEvents

@@ -5,5 +5,8 @@ output "client_log_stream_names" {
 
 output "client_log_s3_prefixes" {
   description = "환경별 적재 경로"
-  value       = { for env, _ in local.client_log_streams : env => "s3://${var.bucket_name}/raw/client-log/env=${env}/" }
+  value = {
+    production = "s3://team-neki-log-production/raw/client-log/"
+    staging    = "s3://${aws_s3_bucket.staging.id}/raw/client-log/"
+  }
 }

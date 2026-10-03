@@ -9,7 +9,8 @@
 
 | 리소스 | 역할 |
 |---|---|
-| `team-neki-log-raw-production-firehose-delivery` | Firehose 가 맡아 S3 에 쓰는 전송 역할 |
+| `team-neki-log-raw-production-firehose-delivery` | Firehose 가 맡아 운영 버킷에 쓰는 전송 역할 |
+| `team-neki-log-raw-staging-firehose-delivery` | 같은 역할의 staging 버킷용 (ADR-0004) |
 | `team-neki-log-infra-production-yapp-firehose` | yapp 이 전송 스트림을 구성할 수 있게 하는 정책 |
 
 전송 스트림 자체는 만들지 않는다. 여기서 주는 것은 **구성할 수 있는 권한**까지다.
@@ -67,14 +68,16 @@ terraform plan
 terraform apply
 ```
 
-적용 뒤 `firehose_delivery_role_arn` 을 전송 스트림 정의에 넘긴다.
+적용 뒤 `firehose_delivery_role_arns` 의 환경별 역할을 전송 스트림 정의에 넘긴다. `raw/infra` 는
+역할 이름으로 ARN 을 조합하므로, 이 모듈을 `raw/infra` 보다 먼저 적용해야 한다.
 
 ## 범위를 좁힌 지점
 
-- 전송 역할은 `s3://team-neki-log-production/raw/` 밖으로 쓰지 못한다. `aggregation/` 은
-  Lambda 영역이라 전송 역할이 닿으면 안 된다
+- 전송 역할은 자기 환경 버킷의 `raw/` 밖으로 쓰지 못한다 (운영 `team-neki-log-production`,
+  staging `team-neki-log-staging`). `aggregation/` 은 Lambda 영역이라 전송 역할이 닿으면 안 되고,
+  staging 역할은 운영 버킷에 닿지 않는다
 - yapp 은 이름이 `team-neki-log-` 로 시작하는 전송 스트림만 다룬다
-- `iam:PassRole` 은 역할 하나로 못박고 `iam:PassedToService` 조건까지 걸었다
+- `iam:PassRole` 은 전송 역할 둘로 못박고 `iam:PassedToService` 조건까지 걸었다
 
 prefix 를 `raw/` 로 잡은 것은 AGENTS.md §4 의 토픽 표에서 원본 로그 수집이 `raw` 이기
 때문이다. 다른 토픽에 붙일 거라면 `firehose_s3_prefix` 와 `delivery_role_name` 을 함께

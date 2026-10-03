@@ -50,14 +50,14 @@ LLD/HLD가 실제와 어긋난다면, 같은 PR에서 문서를 함께 갱신한
 | 용어 | 의미 |
 |---|---|
 | **aggregation** | 일간 집계 데이터(현재 GA4 일간 리포트). raw와 **완전 독립**된 토픽 |
-| **raw** | 원본 로그. 현재는 앱 클라이언트 로그 (Server `POST /api/logs` → Firehose → S3 `raw/client-log/`, ADR-0004) |
+| **raw** | 원본 로그. 현재는 앱 클라이언트 로그 (Server `POST /api/logs` → Firehose → 환경별 버킷 `raw/client-log/`, ADR-0004) |
 | **Producer** | 일간 집계 데이터를 생성해 본 시스템에 공급하는 컴포넌트. 현재 1차 Producer는 GitHub Actions cron + Python (`scripts/ga_daily_report.py`, `.github/workflows/daily-ga-report.yml`). **본 레포 책임** (ADR-0003) |
 | **report_date** | 보고 대상 일자 (KST 기준). S3 경로 `day=` 값과 동일 |
 | **generated_at** | Producer가 페이로드를 만든 시각 (ISO 8601 UTC) |
 | **schema_version** | 페이로드 contract 버전 (`major.minor`). minor=backward compat, major=break |
 | **topic** | 데이터 책임 단위(`aggregation`, `raw`). scope/디렉토리/IAM prefix 모두 이 단위로 정렬 |
 
-리소스 네이밍은 항상 `team-neki-log-<topic>-production-<role>`. 버킷만 예외 (`team-neki-log-production`, 토픽 공유). raw 의 staging 전송 스트림(`team-neki-log-raw-staging-client-log`)도 예외다 (ADR-0004).
+리소스 네이밍은 항상 `team-neki-log-<topic>-production-<role>`. 버킷만 예외 (`team-neki-log-production`, 토픽 공유). raw 의 staging 리소스(버킷 `team-neki-log-staging`, 전송 역할·스트림 `team-neki-log-raw-staging-*`)도 예외다 (ADR-0004).
 
 **접두사가 `team-neki-log-`인 것은 오타가 아니다.** 저장소는 Team-Neki-Platform 으로
 이름이 바뀌었지만 AWS 리소스 이름은 그대로 둔다. 이름을 맞추려고 바꾸면 rename 이
@@ -81,7 +81,7 @@ Lambda, IAM role, 로그 그룹도 이름을 바꾸면 교체된다. 옮기려�
 - API URL, AWS Access Key, GitHub Secret 값을 코드/주석/PR 본문/커밋 메시지 어디에도 적지 마라. 노출 시 즉시 회전
 - **Public Access Block 해제 금지**. 외부 소비자도 IAM 경로로 접근한다
 - **IAM 권한 확장 금지**. Lambda role은 `s3:PutObject` + 로그만. Get/List/Delete 절대 추가하지 마라
-- **`aggregation/` prefix 밖에 쓰지 마라**. raw는 별도 전송 역할(Firehose)이 `raw/` 에만 쓴다
+- **`aggregation/` prefix 밖에 쓰지 마라**. raw는 환경별 전송 역할(Firehose)이 자기 버킷의 `raw/` 에만 쓴다
 - **AWS Budgets $5 한도**를 의식해라. 예상 비용이 이를 넘기는 변경이면 PR 본문 **Operational impact**에 명시
 - 외부 비밀(.tfvars, credentials)을 `.gitignore`에서 빼지 마라
 - `terraform destroy`는 절대 하지 마라 (S3 데이터 영구 소실)

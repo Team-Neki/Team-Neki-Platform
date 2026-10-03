@@ -25,6 +25,7 @@ iOS·Android 앱 로그를 영구 저장할 필요가 생겼습니다. Server(Te
 - 단순성 (컴포넌트 수, 코드 유무)
 - 기존 권한 경계 재사용 (BACKEND-125 의 전송 역할은 `raw/` 만 쓸 수 있음)
 - aggregation 과의 독립 (토픽 경계)
+- 계정의 환경 분리 방식과의 일관성 (Server 미디어, Workflow 는 staging 과 prod 를 버킷으로 나눔)
 
 ## Considered Options
 
@@ -52,8 +53,10 @@ Firehose Direct PUT 은 레코드마다 5KB 단위로 올려 과금합니다 (3K
 
 AGENTS.md 는 단일 환경(prod)을 전제로 하지만, Server 는 staging 에서 배포 전 검증을 합니다.
 
-- **staging 전용 스트림 ★ 선택**
-  같은 버킷에서 `env=` 파티션으로 나눕니다. 운영 원본에 staging 데이터가 섞이지 않고, staging 에서 S3 적재까지 확인할 수 있습니다. 스트림·로그 그룹이 한 벌 더 생기지만 유휴 비용은 0 입니다.
+- **staging 전용 스트림 + 전용 버킷 + 전용 전송 역할 ★ 선택**
+  계정의 다른 서비스(Server 미디어, Workflow)와 같이 환경을 버킷으로 나눕니다. 이름이 `production` 인 버킷에 staging 데이터가 들어가지 않고, staging 전송 역할은 운영 버킷에 닿지 못합니다. 버킷·역할·스트림이 한 벌씩 더 생기고 IAM 이 늘어나지만 유휴 비용은 0 입니다.
+- staging 전용 스트림, 같은 버킷에서 `env=` 경로로 분리
+  IAM 변경이 없다는 이점이 있지만, 운영 버킷에 staging 데이터가 섞이고 운영 전송 역할이 staging 데이터까지 씁니다. 다른 서비스의 환경 분리 방식과도 다릅니다.
 - prod 스트림 공유
   리소스는 적지만 운영 원본에 staging 로그가 섞여 조회할 때마다 걸러야 합니다.
 - staging 미적재 (fake)
@@ -77,15 +80,16 @@ iOS / Android
 Team-Neki-Server  (userId·platform·receivedAt 부착, NDJSON 묶음)
    -> PutRecordBatch
 Firehose  team-neki-log-raw-<env>-client-log   (버퍼 5MiB / 300초, GZIP)
-   -> PutObject (전송 역할, raw/ 만 쓰기)
-S3  team-neki-log-production
-    raw/client-log/env=<env>/year=YYYY/month=MM/day=DD/<firehose 객체>.gz
+   -> PutObject (환경별 전송 역할, 자기 버킷의 raw/ 만 쓰기)
+S3  team-neki-log-production | team-neki-log-staging
+    raw/client-log/year=YYYY/month=MM/day=DD/<firehose 객체>.gz
 ```
 
 ### 저장 구조
-- **버킷**: `team-neki-log-production` (aggregation 과 공유, prefix 로 분리)
-- **경로**: `raw/client-log/env=<production|staging>/year=YYYY/month=MM/day=DD/`
-- **실패 경로**: `raw/client-log-errors/env=<env>/<error-output-type>/year=YYYY/month=MM/day=DD/`
+- **버킷**: 운영 `team-neki-log-production` (aggregation 과 공유, prefix 로 분리), staging `team-neki-log-staging` (raw/infra 가 만듦)
+- **경로**: 두 버킷 모두 `raw/client-log/year=YYYY/month=MM/day=DD/`
+- **실패 경로**: `raw/client-log-errors/<error-output-type>/year=YYYY/month=MM/day=DD/`
+- **버킷 설정 (staging)**: Public Access Block, SSE-S3, Versioning 미설정. 운영 버킷과 같음
 - **날짜 기준**: Firehose 도착 시각, UTC (aggregation 의 KST 와 다름)
 - **포맷**: NDJSON, GZIP
 - **Lifecycle**: 없음 (보관량 재검토 트리거 참고)
@@ -102,10 +106,16 @@ S3  team-neki-log-production
 | 전송 스트림 (prod) | `team-neki-log-raw-production-client-log` |
 | 전송 스트림 (staging) | `team-neki-log-raw-staging-client-log` |
 | 로그 그룹 | `/aws/kinesisfirehose/<스트림 이름>` (14일 보관) |
-| 전송 역할 (기존) | `team-neki-log-raw-production-firehose-delivery` |
-| Terraform | `raw/infra`, state `terraform/state/raw.tfstate` |
+| 버킷 (staging) | `team-neki-log-staging` |
+| 전송 역할 (prod, 기존) | `team-neki-log-raw-production-firehose-delivery` |
+| 전송 역할 (staging) | `team-neki-log-raw-staging-firehose-delivery` |
+| Terraform | 스트림·staging 버킷 `raw/infra` (state `terraform/state/raw.tfstate`), 전송 역할 `infra` |
 
-> staging 스트림은 `team-neki-log-<topic>-production-<role>` 규칙의 예외입니다. 전송 역할은 환경을 나누지 않고 하나를 같이 씁니다 (쓸 수 있는 범위가 `raw/` 로 같음).
+> staging 리소스는 `team-neki-log-<topic>-production-<role>` 규칙의 예외입니다. staging 버킷 이름은 운영 버킷(`team-neki-log-production`)과 짝을 맞췄습니다.
+
+### IAM 변경
+- `infra` 의 전송 역할을 환경별로 둡니다. staging 역할은 `team-neki-log-staging/raw/*` 에만 쓰고, 운영 역할의 권한은 바뀌지 않습니다 (`moved` 로 주소만 옮김)
+- yapp 정책의 `iam:PassRole`, `iam:GetRole` 대상에 staging 역할을 더합니다. yapp 이 staging 스트림도 구성할 수 있게 하기 위함이며, `iam:PassedToService = firehose.amazonaws.com` 조건은 그대로입니다
 
 ### 비용 (서울 리전, 2026-10 공개 가격)
 
@@ -123,11 +133,12 @@ S3  team-neki-log-production
 ### Positive
 - 이 레포에 실행 코드 없이 관리형 서비스만으로 적재
 - 유휴 비용 0, 사용량 비례 과금
-- 운영 원본과 staging 이 `env=` 로 분리되어 Server 가 배포 전 적재를 검증 가능
+- 운영과 staging 이 버킷·역할 단위로 분리되어 Server 가 배포 전 적재를 검증 가능
 - aggregation 과 state·경로·역할 모두 독립
 
 ### Negative / Risks
-- 단일 환경 원칙의 첫 예외 (raw 의 staging 스트림)
+- 단일 환경 원칙의 첫 예외 (raw 의 staging 버킷·역할·스트림)
+- 운영 버킷은 aggregation/infra, staging 버킷은 raw/infra 가 관리해 버킷 소관이 둘로 나뉨
 - 날짜 파티션이 UTC 라 KST 일자 조회 시 앞뒤 날짜를 함께 읽어야 함
 - 로그 원소가 자유 JSON 이라 앱이 개인정보(이메일, 토큰 등)를 넣어도 막지 못함. 앱 측 규칙으로 관리
 - Server 의 재전송(at-least-once)으로 중복 줄이 생길 수 있음
@@ -136,7 +147,7 @@ S3  team-neki-log-production
 ### Re-evaluation Triggers
 - **월 Firehose 비용이 $1 초과** 또는 Budgets 80% 알림 → 레코드 묶음 단위, 버퍼, 샘플링 재검토
 - **로그에 개인정보 포함 필요** → 접근 통제·보관 기간 정책을 별도 ADR 로
-- **raw/ 보관량 100GB 초과** → Lifecycle (aggregation 버킷 설정이므로 해당 state 와 함께)
+- **raw/ 보관량 100GB 초과** → Lifecycle (운영 버킷은 aggregation state, staging 버킷은 raw state 에서)
 - **분석 스키마 확정** → Parquet 변환 재검토
 - **KST 일자 파티션 필요** → dynamic partitioning 비용과 비교
 
