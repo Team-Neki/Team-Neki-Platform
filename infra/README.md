@@ -13,6 +13,7 @@
 | `team-neki-log-infra-production-yapp-firehose` | yapp 이 전송 스트림을 구성할 수 있게 하는 정책 |
 
 전송 스트림 자체는 만들지 않는다. 여기서 주는 것은 **구성할 수 있는 권한**까지다.
+스트림은 토픽 모듈이 만든다 (`raw/infra`, ADR-0004).
 
 ### S3 버킷
 
