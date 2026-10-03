@@ -34,6 +34,18 @@ variable "delivery_role_name" {
   default     = "team-neki-log-raw-production-firehose-delivery"
 }
 
+variable "staging_bucket_name" {
+  type        = string
+  description = "staging 전송 대상 버킷. raw/infra 가 만든다 (ADR-0004)"
+  default     = "team-neki-log-staging"
+}
+
+variable "staging_delivery_role_name" {
+  type        = string
+  description = "staging 전송 역할 이름. staging 버킷의 raw/ 에만 쓴다"
+  default     = "team-neki-log-raw-staging-firehose-delivery"
+}
+
 variable "yapp_policy_name" {
   type        = string
   description = "yapp 에 붙일 Firehose 구성 정책 이름"

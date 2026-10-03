@@ -35,7 +35,7 @@ S3  team-neki-log-production
 │   ├── infra/                   # Terraform
 │   └── README.md                # 컴포넌트 셋업·배포 절차
 ├── raw/                         # 원본 로그 토픽
-│   └── infra/                   # Terraform (Firehose 전송 스트림, ADR-0004)
+│   └── infra/                   # Terraform (Firehose 전송 스트림, staging 버킷, ADR-0004)
 ├── infra/                       # 토픽에 속하지 않는 계정 단위 리소스 (IAM)
 ├── docs/
 │   ├── adr/                     # 의사결정 기록 (최상위 권위)
