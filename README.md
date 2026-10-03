@@ -24,7 +24,7 @@ S3  team-neki-log-production
 
 ## 레포 구조
 
-토픽 기반 디렉토리. `aggregation`은 현재 유일한 토픽이며, 향후 `raw` 등 추가 시 같은 레벨에 형제로 둔다.
+토픽 기반 디렉토리. `aggregation`과 `raw`가 같은 레벨에 형제로 있다.
 `infra`는 토픽이 아니라 계정 단위 공통 리소스 자리다. Terraform state를 토픽과 나눠 쓴다.
 
 ```
@@ -34,6 +34,8 @@ S3  team-neki-log-production
 │   ├── tests/                   # pytest
 │   ├── infra/                   # Terraform
 │   └── README.md                # 컴포넌트 셋업·배포 절차
+├── raw/                         # 원본 로그 토픽
+│   └── infra/                   # Terraform (Firehose 전송 스트림, staging 버킷, ADR-0004)
 ├── infra/                       # 토픽에 속하지 않는 계정 단위 리소스 (IAM)
 ├── docs/
 │   ├── adr/                     # 의사결정 기록 (최상위 권위)
@@ -75,6 +77,7 @@ terraform init && terraform plan && terraform apply
 ### ADR (의사결정)
 - [ADR-0001 — Aggregation Storage on S3](docs/adr/0001-aggregation-storage-on-s3.md)
 - [ADR-0002 — Lint·Test CI 게이트와 에이전트 자동 정리 hook](docs/adr/0002-lint-and-ci-pipeline.md)
+- [ADR-0004 — Raw Client Log Ingestion via Firehose](docs/adr/0004-raw-client-log-firehose.md)
 
 ### 토픽 설계
 - [HLD: Aggregation](docs/aggregation/hld.md) — 시스템 그림, 컴포넌트 책임
