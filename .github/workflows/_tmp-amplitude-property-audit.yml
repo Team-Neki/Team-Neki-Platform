@@ -37,19 +37,8 @@ jobs:
           props = data.get("data", [])
           print(f"전체 event-property 수: {len(props)}")
 
-          targets = {
-              "booth_select",
-              "map_brand_filter_toggle",
-              "brand_order_save",
-              "booth_favorite_add",
-              "booth_favorite_remove",
-              "map_view",
-              "pose_filter_toggle",
-              "photo_upload",
-          }
+          import json
+
           for p in props:
-              if p.get("event_type") in targets:
-                  print(
-                      f"[{p.get('event_type')}] {p.get('property')}: {p.get('description', '')}"
-                  )
+              print(json.dumps(p, ensure_ascii=False))
           PYEOF
