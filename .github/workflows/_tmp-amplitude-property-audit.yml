@@ -1,0 +1,55 @@
+name: _tmp Amplitude Property Audit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: List event properties for brand-related events
+        env:
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
+        run: |
+          python - <<'PYEOF'
+          import os
+
+          import requests
+
+          AUTH = (os.environ["AMPLITUDE_API_KEY"], os.environ["AMPLITUDE_SECRET_KEY"])
+
+          resp = requests.get(
+              "https://amplitude.com/api/2/taxonomy/event-property",
+              auth=AUTH,
+              timeout=15,
+          )
+          print(f"status: {resp.status_code}")
+          data = resp.json()
+          props = data.get("data", [])
+          print(f"전체 event-property 수: {len(props)}")
+
+          targets = {
+              "booth_select",
+              "map_brand_filter_toggle",
+              "brand_order_save",
+              "booth_favorite_add",
+              "booth_favorite_remove",
+              "map_view",
+              "pose_filter_toggle",
+              "photo_upload",
+          }
+          for p in props:
+              if p.get("event_type") in targets:
+                  print(
+                      f"[{p.get('event_type')}] {p.get('property')}: {p.get('description', '')}"
+                  )
+          PYEOF
