@@ -71,8 +71,7 @@ def format_change(current, previous):
 
 
 def main():
-    pretend_today = os.environ.get("PRETEND_TODAY")
-    today = datetime.date.fromisoformat(pretend_today) if pretend_today else datetime.date.today()
+    today = datetime.date.today()
     last_day_of_prev_month = today.replace(day=1) - datetime.timedelta(days=1)
     first_day_of_prev_month = last_day_of_prev_month.replace(day=1)
 

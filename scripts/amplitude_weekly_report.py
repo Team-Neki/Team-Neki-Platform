@@ -70,8 +70,7 @@ def format_change(current, previous):
 
 
 def main():
-    pretend_today = os.environ.get("PRETEND_TODAY")
-    today = datetime.date.fromisoformat(pretend_today) if pretend_today else datetime.date.today()
+    today = datetime.date.today()
     last_sunday = today - datetime.timedelta(days=today.weekday() + 1)
     last_monday = last_sunday - datetime.timedelta(days=6)
 
@@ -202,10 +201,6 @@ def main():
     print("--- 전송 내용 ---")
     print(payload["content"])
     print("-----------------")
-
-    if os.environ.get("DRY_RUN"):
-        print(f"DRY_RUN: 전송 생략 / {period_display}")
-        return
 
     resp = requests.post(DISCORD_WEBHOOK_URL, json=payload)
     resp.raise_for_status()
