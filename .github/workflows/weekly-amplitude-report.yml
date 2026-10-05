@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '0 1 * * 1'  # 매주 월요일 10:00 KST
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '체크하면 디스코드 전송 없이 로그에만 내용을 출력'
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   report:
@@ -24,4 +30,5 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.AMPLITUDE_DISCORD_WEBHOOK_URL }}
           AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
           AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: python scripts/amplitude_weekly_report.py
