@@ -121,7 +121,7 @@ raw 는 실행 코드 없이 Terraform 만 있다. 적용 순서(`infra` 먼저)
 - **토픽 경계를 넘지 마라.** aggregation 작업 중 raw 코드를 미리 만들지 않는다.
 - **ADR과 다른 코드는 버그다.** 임의 변경으로 ADR을 우회하지 말고, 먼저 ADR을 갱신한다.
 - **IAM 권한·S3 prefix·Public Access Block을 임의 확장하지 마라.** ADR-0001의 보안 모델이 전제다.
-- **Commit/PR 제목은 `type(scope): 한국어 제목` + `Refs: ADR-XXXX` trailer.** Scope는 토픽 기반 (`producer`, `aggregation`, `raw`, `infra`, `docs`, `ci`, `repo`).
+- **Commit/PR 제목은 `type(scope): 한국어 제목` + `Refs: ADR-XXXX` trailer.** Scope는 토픽·책임 영역 기반 (`producer`, `aggregation`, `raw`, `infra`, `docs`, `ci`, `repo`).
 - **CI가 머지 게이트다.** 로컬 통과로 끝내지 말고 `.github/workflows/ci.yml`이 통과해야 한다.
 
 ## 비용·운영 가정

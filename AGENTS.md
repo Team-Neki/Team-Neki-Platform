@@ -41,7 +41,7 @@ LLD/HLD가 실제와 어긋난다면, 같은 PR에서 문서를 함께 갱신한
 
 **핵심 요약 (위반 빈발 항목)**:
 - Commit: `type(scope): 한국어 제목` + 본문 한국어 + `Refs: ADR-XXXX` trailer
-- Scope는 **토픽 기반** (`producer`, `aggregation`, `raw`, `infra`, `docs`, `ci`, `repo`). 디렉토리명 아님
+- Scope는 **토픽·책임 영역 기반** (`producer`, `aggregation`, `raw`, `infra`, `docs`, `ci`, `repo`). 디렉토리명 아님
 - Breaking change는 type 뒤 `!` 표기 + `BREAKING CHANGE:` 본문
 - PR 제목 = 그대로 squash commit이 된다. PR 제목도 commit 포맷을 따라라
 
