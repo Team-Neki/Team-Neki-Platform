@@ -4,7 +4,7 @@ PR 제목은 commit convention과 동일하게 작성:
   예) feat(aggregation): report_date 범위 검증 추가
   예) fix(infra)!: S3 bucket 이름 변경 (BREAKING)
 
-자세한 규칙: docs/conventions/commit-convention.md
+자세한 규칙: docs/spec/commit-convention.md
 -->
 
 ## Summary

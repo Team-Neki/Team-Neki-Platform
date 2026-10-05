@@ -57,14 +57,15 @@ Refs: LLD §4.1
 
 > 애매할 땐 **소비자 관점**으로 판단: API 응답·페이로드·저장 경로가 바뀌면 `feat`/`fix`, 내부만 바뀌면 `refactor`/`chore`.
 
-## 3. Scope (토픽 기반)
+## 3. Scope (토픽·책임 영역 기반)
 
-ADR/HLD에서 정의한 **토픽** 단위로 적는다. 디렉토리 구조와 1:1이 아닐 수 있다 (디렉토리는 바뀌어도 토픽은 안정적).
+데이터 **토픽**(`aggregation`, `raw`)이나 컴포넌트·공통 **책임 영역**(`producer`, `infra`, `docs`, `ci`, `repo`) 단위로 적는다. 디렉토리 구조와 1:1이 아닐 수 있다 (디렉토리는 바뀌어도 토픽과 책임 영역은 안정적).
 
 | scope | 의미 |
 |---|---|
 | `aggregation` | 일간 집계 수신/저장 토픽 |
 | `raw` | 원본 로그 수집 토픽 (ADR-0004) |
+| `producer` | 일간 집계 데이터 생성 (GitHub Actions cron + Python, ADR-0003) |
 | `infra` | 토픽에 종속되지 않는 공통 인프라 (계정, terraform backend 등) |
 | `docs` | ADR/HLD/LLD/README 등 문서 |
 | `ci` | GitHub Actions, repo automation |

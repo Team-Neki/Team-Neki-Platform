@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-`aggregation` 토픽의 구현 디테일을 다룬다. HLD에서 정의된 컴포넌트(API Gateway / Lambda / S3)의 **인터페이스 명세, 페이로드 contract, 검증 규칙, 운영 디테일, IaC 구조**를 기술한다. 결정 배경은 [ADR-0001](../adr/0001-aggregation-storage-on-s3.md), 시스템 그림은 [HLD](./hld.md) 참조.
+`aggregation` 토픽의 구현 디테일을 다룬다. HLD에서 정의된 컴포넌트(API Gateway / Lambda / S3)의 **인터페이스 명세, 페이로드 contract, 검증 규칙, 운영 디테일, IaC 구조**를 기술한다. 결정 배경은 [ADR-0001](../adr/0001-aggregation-storage-on-s3.md), 시스템 그림은 [HLD](../hld/aggregation.md) 참조.
 
 ## 2. API Contract
 
@@ -547,6 +547,6 @@ Terraform이 처리할 수 없는 항목. 별도 README에 상세 절차 기술 
 
 ## 10. References
 - [ADR-0001: Aggregation Storage on S3](../adr/0001-aggregation-storage-on-s3.md)
-- [HLD: Aggregation](./hld.md)
+- [HLD: Aggregation](../hld/aggregation.md)
 - 코드: `Team-Neki-Platform/aggregation/src/`
 - 스키마: `Team-Neki-Platform/aggregation/src/schemas/ga4-daily-report.v1.json`
