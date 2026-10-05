@@ -2,7 +2,7 @@
 
 일간 집계 데이터 수신·저장 컴포넌트.
 
-- 설계: [HLD](../docs/aggregation/hld.md) · [LLD](../docs/aggregation/lld.md)
+- 설계: [HLD](../docs/hld/aggregation.md) · [LLD](../docs/lld/aggregation.md)
 - 결정 배경: [ADR-0001](../docs/adr/0001-aggregation-storage-on-s3.md)
 
 ## 디렉토리 구조
@@ -95,7 +95,7 @@ terraform init -migrate-state
 
 ## Producer 측 변경 가이드
 
-GA4 일간 리포트를 생성하는 GitHub Actions workflow에서, 정규화된 JSON 페이로드를 본 endpoint로 POST해야 한다. 자세한 페이로드 스키마는 `src/schemas/ga4-daily-report.v1.json` 또는 [LLD §3](../docs/aggregation/lld.md#3-payload-schema) 참조.
+GA4 일간 리포트를 생성하는 GitHub Actions workflow에서, 정규화된 JSON 페이로드를 본 endpoint로 POST해야 한다. 자세한 페이로드 스키마는 `src/schemas/ga4-daily-report.v1.json` 또는 [LLD §3](../docs/lld/aggregation.md#3-payload-schema) 참조.
 
 예시:
 

@@ -17,7 +17,7 @@ Team-Neki-Platform의 **aggregation** 토픽은 네키 앱 도메인의 **일간
 ### Out of Scope
 - 데이터 **분석/조회/시각화** (별도 모듈/레포 책임)
 - Producer 측 데이터 수집 로직 (예: GA4 호출, Discord 알림)
-- 원본 로그(raw) 수집 (향후 별도 ADR/HLD)
+- 원본 로그(raw) 수집 (ADR-0004, [HLD: Raw](raw.md))
 - 다환경 운영, 다계정 격리, 실시간 처리
 
 ## 3. Architecture
@@ -132,7 +132,7 @@ sequenceDiagram
   - Lifecycle: 없음 (Standard 영구)
   - Public Access Block: 활성화
   - 암호화: SSE-S3 (기본)
-- **확장 영역**: 향후 `raw/...` prefix가 같은 버킷에 추가될 수 있음
+- **공유 영역**: 같은 버킷의 `raw/` prefix는 raw 토픽의 Firehose가 쓴다 ([HLD: Raw](raw.md))
 
 ## 5. External Integrations
 
@@ -205,4 +205,4 @@ sequenceDiagram
 
 ## 9. References
 - [ADR-0001: Aggregation Storage on S3](../adr/0001-aggregation-storage-on-s3.md)
-- LLD: `docs/aggregation/lld.md` (추후 작성)
+- [LLD: Aggregation](../lld/aggregation.md)

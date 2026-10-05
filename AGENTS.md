@@ -15,8 +15,8 @@ Team-Neki-Platform는 네키 앱 도메인의 **일간 집계 데이터를 생�
 충돌 시 위가 이긴다.
 
 1. **ADR** (`docs/adr/`) — 결정의 최상위 권위
-2. **HLD** (`docs/<topic>/hld.md`) — 시스템 그림과 컴포넌트 책임
-3. **LLD** (`docs/<topic>/lld.md`) — 인터페이스/검증/IaC 디테일
+2. **HLD** (`docs/hld/<topic>.md`) — 시스템 그림과 컴포넌트 책임
+3. **LLD** (`docs/lld/<topic>.md`) — 인터페이스/검증/IaC 디테일
 4. **코드** — 실제 동작
 5. **이 문서 / 컨벤션** — 작업 방식
 
@@ -30,7 +30,7 @@ LLD/HLD가 실제와 어긋난다면, 같은 PR에서 문서를 함께 갱신한
 
 | 영역 | 위치 |
 |---|---|
-| Commit 메시지 | `docs/conventions/commit-convention.md` |
+| Commit 메시지 | `docs/spec/commit-convention.md` |
 | PR 형식 | `.github/PULL_REQUEST_TEMPLATE.md` |
 | ADR 작성 (구조/번호 규칙) | `docs/adr/0001-aggregation-storage-on-s3.md` 양식 참조 |
 | 도메인 용어 | 본 문서 §4 |
@@ -96,7 +96,7 @@ Lambda, IAM role, 로그 그룹도 이름을 바꾸면 교체된다. 옮기려�
 4. **테스트**: `aggregation/tests/`의 pytest 통과 + 변경된 검증 규칙은 fixture 추가
 5. **Infra 변경**: `terraform fmt -recursive` + `terraform validate` 후 `terraform plan`을 로컬에서 돌려 결과를 PR 본문에 붙인다. `apply`는 사람이 명시 승인 후
 6. **CI**: `.github/workflows/ci.yml`이 위 3·4·5를 PR에서 다시 돌린다. 이게 머지 게이트다 — 로컬 통과로 끝나지 마라
-7. **커밋**: `docs/conventions/commit-convention.md` 그대로. `Refs:` 빠뜨리지 마라
+7. **커밋**: `docs/spec/commit-convention.md` 그대로. `Refs:` 빠뜨리지 마라
 8. **PR**: `.github/PULL_REQUEST_TEMPLATE.md`의 모든 섹션을 채운다. "없음"으로 비울 수는 있지만 섹션 자체를 지우지 마라
 9. **AI 협업 표시**: 의미 있는 협업이었으면 `Co-Authored-By:` trailer 적는다. 자동 삽입 강제 아님. AI 단독 생성을 인간 작업으로 위장하지 마라
 

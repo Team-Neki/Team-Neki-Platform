@@ -134,5 +134,5 @@ AGENTS.md §7과의 정합성 유지. AWS credentials를 GitHub Actions에 주�
 ## References
 - AGENTS.md §3 (컨벤션 표), §7 (검증 흐름)
 - ADR-0001 — 토픽 분리·단일 운영자 가정 (path-filter 결정 근거)
-- `docs/conventions/commit-convention.md` — type `ci`/`build`/`style` 정의
+- `docs/spec/commit-convention.md` — type `ci`/`build`/`style` 정의
 - ruff 공식 문서: <https://docs.astral.sh/ruff/>

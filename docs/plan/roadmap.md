@@ -124,6 +124,7 @@ GA4 일간 리포트 GitHub Actions에서 본 endpoint 호출 추가. (Producer�
 
 ## References
 - [ADR-0001: Aggregation Storage on S3](../adr/0001-aggregation-storage-on-s3.md)
-- [HLD: Aggregation](../aggregation/hld.md)
-- [LLD: Aggregation](../aggregation/lld.md)
+- [HLD: Aggregation](../hld/aggregation.md)
+- [LLD: Aggregation](../lld/aggregation.md)
+- [HLD: Raw](../hld/raw.md)
 - [aggregation/README.md](../../aggregation/README.md) — 셋업 절차 상세

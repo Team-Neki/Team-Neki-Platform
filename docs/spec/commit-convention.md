@@ -65,6 +65,7 @@ ADR/HLD에서 정의한 **토픽** 단위로 적는다. 디렉토리 구조와 1
 |---|---|
 | `aggregation` | 일간 집계 수신/저장 토픽 |
 | `raw` | 원본 로그 수집 토픽 (ADR-0004) |
+| `producer` | 일간 집계 데이터 생성 (GitHub Actions cron + Python, ADR-0003) |
 | `infra` | 토픽에 종속되지 않는 공통 인프라 (계정, terraform backend 등) |
 | `docs` | ADR/HLD/LLD/README 등 문서 |
 | `ci` | GitHub Actions, repo automation |

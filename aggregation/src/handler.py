@@ -1,6 +1,6 @@
 """Lambda handler for ga4-daily-report aggregation ingestion.
 
-See ../../docs/aggregation/lld.md for the contract.
+See ../../docs/lld/aggregation.md for the contract.
 """
 
 from __future__ import annotations
