@@ -108,15 +108,24 @@ def main():
     booth_favorite_add = query(start, end, "booth_favorite_add", metric="totals")
     booth_favorite_remove = query(start, end, "booth_favorite_remove", metric="totals")
     favorite_booth_view = query(start, end, "favorite_booth_view", metric="totals")
+    favorite_booth_filter_on = query(start, end, "favorite_booth_filter_on", metric="totals")
+    favorite_booth_filter_off = query(start, end, "favorite_booth_filter_off", metric="totals")
+    brand_order_save = query(start, end, "brand_order_save", metric="totals")
 
     pose_filter_toggle = query(start, end, "pose_filter_toggle", metric="totals")
     pose_random_start = query(start, end, "pose_random_start", metric="totals")
+    pose_random_session_end = query(start, end, "pose_random_session_end", metric="totals")
     pose_bookmark = query(start, end, "pose_bookmark", metric="totals")
     pose_bookmark_filter = query(start, end, "pose_bookmark_filter", metric="totals")
 
     photo_detail_view = query(start, end, "photo_detail_view", metric="totals")
     photo_memo_create = query(start, end, "photo_memo_create", metric="totals")
     album_create = query(start, end, "album_create", metric="totals")
+    album_add_from_detail = query(start, end, "album_add_from_detail", metric="totals")
+    album_add_from_multi = query(start, end, "album_add_from_multi", metric="totals")
+    photo_add_to_album = query(start, end, "photo_add_to_album", metric="totals")
+    photo_copy = query(start, end, "photo_copy", metric="totals")
+    photo_move = query(start, end, "photo_move", metric="totals")
     upload_breakdown = dict(
         query(
             start,
@@ -132,6 +141,16 @@ def main():
     notification_click = query(start, end, "notification_click", metric="totals")
     mypage_logout = query(start, end, "mypage_logout", metric="totals")
     mypage_withdraw = query(start, end, "mypage_withdraw", metric="totals")
+
+    app_open = query(start, end, "app_open", metric="totals")
+    session_start = query(start, end, "session_start", metric="totals")
+    session_end = query(start, end, "session_end", metric="totals")
+
+    sdk_app_opened = query(start, end, "[Amplitude] Application Opened", metric="totals")
+    sdk_app_backgrounded = query(
+        start, end, "[Amplitude] Application Backgrounded", metric="totals"
+    )
+    sdk_app_updated = query(start, end, "[Amplitude] Application Updated", metric="totals")
 
     mau_change = format_change(mau, mau_prev)
     new_users_change = format_change(new_users, new_users_prev)
@@ -149,11 +168,13 @@ def main():
         f"🧭 길찾기 **{map_route_click}회**",
         f"⭐ 즐겨찾기 추가/삭제 **{booth_favorite_add}회 / {booth_favorite_remove}회**",
         f"👀 즐겨찾기 조회 **{favorite_booth_view}회**",
+        f"🎚️ 저장 필터 on/off **{favorite_booth_filter_on}회 / {favorite_booth_filter_off}회**",
+        f"🔀 브랜드 순서 저장 **{brand_order_save}회**",
         "",
         "### 포즈",
         f"🔍 진입 **{pose_view_count}회** ({pose_view_users}명)",
         f"🎚️ 필터 토글 **{pose_filter_toggle}회**",
-        f"🎲 랜덤 시작 **{pose_random_start}회**",
+        f"🎲 랜덤 시작 **{pose_random_start}회**  |  랜덤 종료 **{pose_random_session_end}회**",
         f"🔖 북마크 **{pose_bookmark}회**  |  북마크 필터 **{pose_bookmark_filter}회**",
         "",
         "### 아카이브",
@@ -161,7 +182,16 @@ def main():
         f"🖼️ 사진 상세 **{photo_detail_view}회**",
         f"📝 메모 작성 **{photo_memo_create}회**",
         f"📁 앨범 생성 **{album_create}회**",
+        f"🗂️ 앨범에 추가  단일 **{album_add_from_detail}회**  |  다중 **{album_add_from_multi}회**",
+        f"📥 사진 이동  가져오기 **{photo_add_to_album}회**  |  복사 **{photo_copy}회**  |  이동 **{photo_move}회**",
         f"⬆️ 업로드  갤러리 **{gallery}회**  |  QR **{qr}회**",
+        "",
+        "### 세션 / 앱 진입",
+        f"🔓 app_open **{app_open}회**",
+        f"▶️ 세션 시작 **{session_start}회**  |  ⏹️ 세션 종료 **{session_end}회**",
+        "",
+        "### 기타 (SDK 자동수집)",
+        f"📲 포그라운드 진입 **{sdk_app_opened}회**  |  백그라운드 전환 **{sdk_app_backgrounded}회**  |  앱 업데이트 **{sdk_app_updated}회**",
         "",
         "-# neki · Amplitude 자동 리포트",
     ]
