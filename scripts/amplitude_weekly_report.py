@@ -60,6 +60,26 @@ def query(start, end, event_type, metric="uniques", group_by=None):
     return sum(series[0]) if series and series[0] else 0
 
 
+def top_n(start, end, event_type, property_name, n=3):
+    """이벤트 property별 totals를 많은 순으로 상위 n개 (label, count) 리스트로 반환한다. 빈 값은 제외."""
+    pairs = query(
+        start,
+        end,
+        event_type,
+        metric="totals",
+        group_by=[{"type": "event", "value": property_name}],
+    )
+    pairs = [(label, count) for label, count in pairs if label]
+    pairs.sort(key=lambda x: x[1], reverse=True)
+    return pairs[:n]
+
+
+def format_top(pairs, suffix="회"):
+    if not pairs:
+        return "데이터 없음"
+    return " · ".join(f"{label} {count}{suffix}" for label, count in pairs)
+
+
 def format_change(current, previous):
     """전주 대비 증감률을 '(▲12.3%)' 형태로 만든다. 전주 값이 0이면 계산이 무의미하므로 생략."""
     if previous == 0:
@@ -107,8 +127,21 @@ def main():
     favorite_booth_filter_on = query(start, end, "favorite_booth_filter_on", metric="totals")
     favorite_booth_filter_off = query(start, end, "favorite_booth_filter_off", metric="totals")
     brand_order_save = query(start, end, "brand_order_save", metric="totals")
+    brand_filter_top = top_n(start, end, "map_brand_filter_toggle", "brand_name")
+    favorite_add_top = top_n(start, end, "booth_favorite_add", "booth_name")
+    priority_brand_1_top = top_n(start, end, "brand_order_save", "priority_brand_1", n=1)
+    priority_brand_2_top = top_n(start, end, "brand_order_save", "priority_brand_2", n=1)
+    priority_brand_3_top = top_n(start, end, "brand_order_save", "priority_brand_3", n=1)
 
     pose_filter_toggle = query(start, end, "pose_filter_toggle", metric="totals")
+    people_count_dist = query(
+        start,
+        end,
+        "pose_filter_toggle",
+        metric="totals",
+        group_by=[{"type": "event", "value": "people_count"}],
+    )
+    people_count_dist.sort(key=lambda x: int(x[0]) if str(x[0]).isdigit() else 0)
     pose_random_start = query(start, end, "pose_random_start", metric="totals")
     pose_random_session_end = query(start, end, "pose_random_session_end", metric="totals")
     pose_bookmark = query(start, end, "pose_bookmark", metric="totals")
@@ -159,22 +192,28 @@ def main():
         f"1. 진입 **{map_view_count}회** ({map_view_users}명)",
         f"2. 재검색 **{map_re_search}회**",
         f"3. 브랜드 필터 **{map_brand_filter_toggle}회**",
-        f"4. 부스 선택 **{booth_select_count}회** ({booth_select_users}명)",
-        f"5. 길찾기 **{map_route_click}회**",
-        f"6. 즐겨찾기 추가 **{booth_favorite_add}회**",
-        f"7. 즐겨찾기 삭제 **{booth_favorite_remove}회**",
-        f"8. 즐겨찾기 조회 **{favorite_booth_view}회**",
-        f"9. 저장 필터 on **{favorite_booth_filter_on}회**",
-        f"10. 저장 필터 off **{favorite_booth_filter_off}회**",
-        f"11. 브랜드 순서 저장 **{brand_order_save}회**",
+        f"4. 브랜드 필터 Top 3 **{format_top(brand_filter_top)}**",
+        f"5. 부스 선택 **{booth_select_count}회** ({booth_select_users}명)",
+        f"6. 길찾기 **{map_route_click}회**",
+        f"7. 즐겨찾기 추가 **{booth_favorite_add}회**",
+        f"8. 즐겨찾기 추가 Top 3 부스 **{format_top(favorite_add_top)}**",
+        f"9. 즐겨찾기 삭제 **{booth_favorite_remove}회**",
+        f"10. 즐겨찾기 조회 **{favorite_booth_view}회**",
+        f"11. 저장 필터 on **{favorite_booth_filter_on}회**",
+        f"12. 저장 필터 off **{favorite_booth_filter_off}회**",
+        f"13. 브랜드 순서 저장 **{brand_order_save}회**",
+        f"14. 우선순위 1위 브랜드 **{format_top(priority_brand_1_top)}**",
+        f"15. 우선순위 2위 브랜드 **{format_top(priority_brand_2_top)}**",
+        f"16. 우선순위 3위 브랜드 **{format_top(priority_brand_3_top)}**",
         "",
         "### 포즈",
         f"1. 진입 **{pose_view_count}회** ({pose_view_users}명)",
         f"2. 필터 토글 **{pose_filter_toggle}회**",
-        f"3. 랜덤 시작 **{pose_random_start}회**",
-        f"4. 랜덤 종료 **{pose_random_session_end}회**",
-        f"5. 북마크 **{pose_bookmark}회**",
-        f"6. 북마크 필터 **{pose_bookmark_filter}회**",
+        f"3. 인원수 필터 분포 **{' · '.join(f'{label}인 {count}회' for label, count in people_count_dist) or '데이터 없음'}**",
+        f"4. 랜덤 시작 **{pose_random_start}회**",
+        f"5. 랜덤 종료 **{pose_random_session_end}회**",
+        f"6. 북마크 **{pose_bookmark}회**",
+        f"7. 북마크 필터 **{pose_bookmark_filter}회**",
         "",
         "### 아카이브",
         f"1. 진입 **{archiving_view_count}회** ({archiving_view_users}명)",
