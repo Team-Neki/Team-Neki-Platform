@@ -49,6 +49,13 @@ jobs:
           event_types = sorted({e["event_type"] for e in events if e.get("is_active") and not e.get("deleted")})
           print(f"조회 대상 이벤트 수: {len(event_types)}")
 
+          print("--- 이벤트 설명/카테고리 ---")
+          for e in sorted(events, key=lambda x: x["event_type"]):
+              if not e.get("is_active") or e.get("deleted"):
+                  continue
+              category = (e.get("category") or {}).get("name", "")
+              print(f"[{category}] {e['event_type']}: {e.get('description', '')}")
+
           results = []
           for event_type in event_types:
               params = {
