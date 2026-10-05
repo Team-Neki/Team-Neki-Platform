@@ -1,0 +1,75 @@
+name: _tmp Amplitude Wider Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Check wider date range for sparse events
+        env:
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
+        run: |
+          python - <<'PYEOF'
+          import datetime
+          import json
+          import os
+
+          import requests
+
+          AUTH = (os.environ["AMPLITUDE_API_KEY"], os.environ["AMPLITUDE_SECRET_KEY"])
+          URL = "https://amplitude.com/api/2/events/segmentation"
+
+          today = datetime.date.today()
+          start = (today - datetime.timedelta(days=90)).strftime("%Y%m%d")
+          end = (today - datetime.timedelta(days=1)).strftime("%Y%m%d")
+          print(f"조회 기간: {start} ~ {end} (최근 90일)")
+
+          def query(event_type, group_by=None):
+              event = {"event_type": event_type}
+              if group_by:
+                  event["group_by"] = group_by
+              params = {
+                  "e": json.dumps(event),
+                  "start": start,
+                  "end": end,
+                  "m": "totals",
+              }
+              r = requests.get(URL, params=params, auth=AUTH, timeout=15)
+              if r.status_code == 400:
+                  print(f"  {event_type}: 400 (데이터 없음/오류) - {r.text[:200]}")
+                  return None
+              r.raise_for_status()
+              data = r.json()["data"]
+              if group_by:
+                  labels = data.get("seriesLabels", [])
+                  series = data.get("series", [])
+                  result = []
+                  for i, label in enumerate(labels):
+                      value = label[-1] if isinstance(label, list) else label
+                      total = sum(series[i]) if i < len(series) and series[i] else 0
+                      result.append((value, total))
+                  return result
+              series = data.get("series", [[0]])
+              return sum(series[0]) if series and series[0] else 0
+
+          for event_type in ["booth_favorite_add", "booth_favorite_remove", "brand_order_save"]:
+              total = query(event_type)
+              print(f"{event_type} 총합(90일): {total}")
+
+          print("--- booth_favorite_add x booth_name (90일) ---")
+          print(query("booth_favorite_add", group_by=[{"type": "event", "value": "booth_name"}]))
+
+          print("--- brand_order_save x priority_brand_1 (90일) ---")
+          print(query("brand_order_save", group_by=[{"type": "event", "value": "priority_brand_1"}]))
+          PYEOF
