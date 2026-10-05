@@ -138,8 +138,6 @@ def main():
     mypage_logout = query(start, end, "mypage_logout", metric="totals")
     mypage_withdraw = query(start, end, "mypage_withdraw", metric="totals")
 
-    app_open = query(start, end, "app_open", metric="totals")
-
     sdk_app_opened = query(start, end, "[Amplitude] Application Opened", metric="totals")
     sdk_app_backgrounded = query(
         start, end, "[Amplitude] Application Backgrounded", metric="totals"
@@ -189,9 +187,6 @@ def main():
         f"8. 사진 복사 **{photo_copy}회**",
         f"9. 사진 이동 **{photo_move}회**",
         f"10. 업로드  갤러리 **{gallery}회**  |  QR **{qr}회**",
-        "",
-        "### 앱 진입",
-        f"1. app_open **{app_open}회**",
         "",
         "### 기타 (SDK 자동수집)",
         f"1. 포그라운드 진입 **{sdk_app_opened}회**",
