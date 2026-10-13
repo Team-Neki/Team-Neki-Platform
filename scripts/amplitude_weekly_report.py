@@ -180,15 +180,15 @@ def main():
     wau_change = format_change(wau, wau_prev)
     new_users_change = format_change(new_users, new_users_prev)
 
-    lines = [
-        f"## 🗓️ Amplitude 주간 리포트 · {period_display}",
+    summary_lines = [
         f"1. WAU **{wau}명**{wau_change}",
         f"2. 신규(설치) **{new_users}명**{new_users_change}",
         f"3. 알림 재유입 **{notification_click}회**",
         f"4. 로그아웃 **{mypage_logout}회**",
         f"5. 탈퇴 **{mypage_withdraw}회**",
-        "",
-        "### 지도",
+    ]
+
+    map_lines = [
         f"1. 진입 **{map_view_count}회** ({map_view_users}명)",
         f"2. 재검색 **{map_re_search}회**",
         f"3. 브랜드 필터 **{map_brand_filter_toggle}회**",
@@ -205,8 +205,9 @@ def main():
         f"14. 우선순위 1위 브랜드 **{format_top(priority_brand_1_top)}**",
         f"15. 우선순위 2위 브랜드 **{format_top(priority_brand_2_top)}**",
         f"16. 우선순위 3위 브랜드 **{format_top(priority_brand_3_top)}**",
-        "",
-        "### 포즈",
+    ]
+
+    pose_lines = [
         f"1. 진입 **{pose_view_count}회** ({pose_view_users}명)",
         f"2. 필터 토글 **{pose_filter_toggle}회**",
         f"3. 인원수 필터 분포 **{' · '.join(f'{label}인 {count}회' for label, count in people_count_dist) or '데이터 없음'}**",
@@ -214,8 +215,9 @@ def main():
         f"5. 랜덤 종료 **{pose_random_session_end}회**",
         f"6. 북마크 **{pose_bookmark}회**",
         f"7. 북마크 필터 **{pose_bookmark_filter}회**",
-        "",
-        "### 아카이브",
+    ]
+
+    archive_lines = [
         f"1. 진입 **{archiving_view_count}회** ({archiving_view_users}명)",
         f"2. 사진 상세 **{photo_detail_view}회**",
         f"3. 메모 작성 **{photo_memo_create}회**",
@@ -226,23 +228,42 @@ def main():
         f"8. 사진 복사 **{photo_copy}회**",
         f"9. 사진 이동 **{photo_move}회**",
         f"10. 업로드  갤러리 **{gallery}회**  |  QR **{qr}회**",
-        "",
-        "### 기타 (SDK 자동수집)",
+    ]
+
+    sdk_lines = [
         f"1. 포그라운드 진입 **{sdk_app_opened}회**",
         f"2. 백그라운드 전환 **{sdk_app_backgrounded}회**",
         f"3. 앱 업데이트 **{sdk_app_updated}회**",
-        "",
-        "-# neki · Amplitude 자동 리포트",
     ]
 
     payload = {
         "username": "네키 Amplitude 주간봇",
         "avatar_url": "https://i.ifh.cc/PbdkGM.jpg",
-        "content": "\n".join(lines),
+        "embeds": [
+            {
+                "title": f"🗓️ Amplitude 주간 리포트 · {period_display}",
+                "color": 0x5865F2,
+                "description": "\n".join(summary_lines),
+                "fields": [
+                    {"name": "지도", "value": "\n".join(map_lines), "inline": False},
+                    {"name": "포즈", "value": "\n".join(pose_lines), "inline": False},
+                    {"name": "아카이브", "value": "\n".join(archive_lines), "inline": False},
+                    {
+                        "name": "기타 (SDK 자동수집)",
+                        "value": "\n".join(sdk_lines),
+                        "inline": False,
+                    },
+                ],
+                "footer": {"text": "neki · Amplitude 자동 리포트"},
+            }
+        ],
     }
 
-    print("--- 전송 내용 ---")
-    print(payload["content"])
+    print("--- 전송 내용 (embed) ---")
+    for field in payload["embeds"][0]["fields"]:
+        if len(field["value"]) > 1024:
+            print(f"경고: field '{field['name']}' 길이 {len(field['value'])} > 1024자 제한 초과")
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
     print("-----------------")
 
     if os.environ.get("DRY_RUN"):
