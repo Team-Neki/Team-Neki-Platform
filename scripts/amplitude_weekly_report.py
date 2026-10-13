@@ -266,7 +266,7 @@ def main():
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     print("-----------------")
 
-    if os.environ.get("DRY_RUN"):
+    if os.environ.get("DRY_RUN", "").lower() == "true":
         print(f"DRY_RUN: 전송 생략 / {period_display}")
         return
 
