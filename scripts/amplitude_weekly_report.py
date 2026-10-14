@@ -240,7 +240,9 @@ def main():
     ]
 
     def to_fields(pairs):
-        return [{"name": name, "value": value, "inline": True} for name, value in pairs]
+        # name을 보이지 않는 zero-width space로 두면 디스코드가 이름/값을 세로로
+        # 쌓지 않고, value 한 줄(이모지 라벨 + 값)만 가로로 그리드에 배치한다.
+        return [{"name": "​", "value": f"{name} {value}", "inline": True} for name, value in pairs]
 
     payload = {
         "username": "네키 Amplitude 주간봇",
