@@ -180,61 +180,67 @@ def main():
     wau_change = format_change(wau, wau_prev)
     new_users_change = format_change(new_users, new_users_prev)
 
-    summary_lines = [
-        f"👥 WAU **{wau}명**{wau_change}",
-        f"🆕 신규(설치) **{new_users}명**{new_users_change}",
-        f"🔔 알림 재유입 **{notification_click}회**",
-        f"↩️ 로그아웃 **{mypage_logout}회**",
-        f"⚠️ 탈퇴 **{mypage_withdraw}회**",
+    summary_fields = [
+        ("👥 WAU", f"**{wau}명**{wau_change}"),
+        ("🆕 신규(설치)", f"**{new_users}명**{new_users_change}"),
+        ("🔔 알림 재유입", f"**{notification_click}회**"),
+        ("↩️ 로그아웃", f"**{mypage_logout}회**"),
+        ("⚠️ 탈퇴", f"**{mypage_withdraw}회**"),
     ]
 
-    map_lines = [
-        f"🔍 진입 **{map_view_count}회** ({map_view_users}명)",
-        f"🔁 재검색 **{map_re_search}회**",
-        f"🏷️ 브랜드 필터 **{map_brand_filter_toggle}회**",
-        f"🏆 브랜드 필터 Top 3 **{format_top(brand_filter_top)}**",
-        f"📍 부스 선택 **{booth_select_count}회** ({booth_select_users}명)",
-        f"🧭 길찾기 **{map_route_click}회**",
-        f"⭐ 즐겨찾기 추가 **{booth_favorite_add}회**",
-        f"🏆 즐겨찾기 추가 Top 3 부스 **{format_top(favorite_add_top)}**",
-        f"🗑️ 즐겨찾기 삭제 **{booth_favorite_remove}회**",
-        f"👀 즐겨찾기 조회 **{favorite_booth_view}회**",
-        f"🎚️ 저장 필터 on **{favorite_booth_filter_on}회**",
-        f"🎚️ 저장 필터 off **{favorite_booth_filter_off}회**",
-        f"🔀 브랜드 순서 저장 **{brand_order_save}회**",
-        f"🥇 우선순위 1위 브랜드 **{format_top(priority_brand_1_top)}**",
-        f"🥈 우선순위 2위 브랜드 **{format_top(priority_brand_2_top)}**",
-        f"🥉 우선순위 3위 브랜드 **{format_top(priority_brand_3_top)}**",
+    map_fields = [
+        ("🔍 진입", f"**{map_view_count}회** ({map_view_users}명)"),
+        ("🔁 재검색", f"**{map_re_search}회**"),
+        ("🏷️ 브랜드 필터", f"**{map_brand_filter_toggle}회**"),
+        ("🏆 브랜드 필터 Top 3", f"**{format_top(brand_filter_top)}**"),
+        ("📍 부스 선택", f"**{booth_select_count}회** ({booth_select_users}명)"),
+        ("🧭 길찾기", f"**{map_route_click}회**"),
+        ("⭐ 즐겨찾기 추가", f"**{booth_favorite_add}회**"),
+        ("🏆 즐겨찾기 추가 Top 3 부스", f"**{format_top(favorite_add_top)}**"),
+        ("🗑️ 즐겨찾기 삭제", f"**{booth_favorite_remove}회**"),
+        ("👀 즐겨찾기 조회", f"**{favorite_booth_view}회**"),
+        ("🎚️ 저장 필터 on", f"**{favorite_booth_filter_on}회**"),
+        ("🎚️ 저장 필터 off", f"**{favorite_booth_filter_off}회**"),
+        ("🔀 브랜드 순서 저장", f"**{brand_order_save}회**"),
+        ("🥇 우선순위 1위 브랜드", f"**{format_top(priority_brand_1_top)}**"),
+        ("🥈 우선순위 2위 브랜드", f"**{format_top(priority_brand_2_top)}**"),
+        ("🥉 우선순위 3위 브랜드", f"**{format_top(priority_brand_3_top)}**"),
     ]
 
-    pose_lines = [
-        f"🔍 진입 **{pose_view_count}회** ({pose_view_users}명)",
-        f"🎚️ 필터 토글 **{pose_filter_toggle}회**",
-        f"🔢 인원수 필터 분포 **{' · '.join(f'{label}인 {count}회' for label, count in people_count_dist) or '데이터 없음'}**",
-        f"🎲 랜덤 시작 **{pose_random_start}회**",
-        f"🏁 랜덤 종료 **{pose_random_session_end}회**",
-        f"🔖 북마크 **{pose_bookmark}회**",
-        f"📌 북마크 필터 **{pose_bookmark_filter}회**",
+    pose_fields = [
+        ("🔍 진입", f"**{pose_view_count}회** ({pose_view_users}명)"),
+        ("🎚️ 필터 토글", f"**{pose_filter_toggle}회**"),
+        (
+            "🔢 인원수 필터 분포",
+            f"**{' · '.join(f'{label}인 {count}회' for label, count in people_count_dist) or '데이터 없음'}**",
+        ),
+        ("🎲 랜덤 시작", f"**{pose_random_start}회**"),
+        ("🏁 랜덤 종료", f"**{pose_random_session_end}회**"),
+        ("🔖 북마크", f"**{pose_bookmark}회**"),
+        ("📌 북마크 필터", f"**{pose_bookmark_filter}회**"),
     ]
 
-    archive_lines = [
-        f"🔍 진입 **{archiving_view_count}회** ({archiving_view_users}명)",
-        f"🖼️ 사진 상세 **{photo_detail_view}회**",
-        f"📝 메모 작성 **{photo_memo_create}회**",
-        f"📁 앨범 생성 **{album_create}회**",
-        f"🗂️ 앨범에 추가(단일) **{album_add_from_detail}회**",
-        f"🗃️ 앨범에 추가(다중) **{album_add_from_multi}회**",
-        f"📥 사진 가져오기 **{photo_add_to_album}회**",
-        f"📋 사진 복사 **{photo_copy}회**",
-        f"🔄 사진 이동 **{photo_move}회**",
-        f"⬆️ 업로드  갤러리 **{gallery}회**  |  QR **{qr}회**",
+    archive_fields = [
+        ("🔍 진입", f"**{archiving_view_count}회** ({archiving_view_users}명)"),
+        ("🖼️ 사진 상세", f"**{photo_detail_view}회**"),
+        ("📝 메모 작성", f"**{photo_memo_create}회**"),
+        ("📁 앨범 생성", f"**{album_create}회**"),
+        ("🗂️ 앨범에 추가(단일)", f"**{album_add_from_detail}회**"),
+        ("🗃️ 앨범에 추가(다중)", f"**{album_add_from_multi}회**"),
+        ("📥 사진 가져오기", f"**{photo_add_to_album}회**"),
+        ("📋 사진 복사", f"**{photo_copy}회**"),
+        ("🔄 사진 이동", f"**{photo_move}회**"),
+        ("⬆️ 업로드", f"갤러리 **{gallery}회**  |  QR **{qr}회**"),
     ]
 
-    sdk_lines = [
-        f"📲 포그라운드 진입 **{sdk_app_opened}회**",
-        f"🌙 백그라운드 전환 **{sdk_app_backgrounded}회**",
-        f"🆙 앱 업데이트 **{sdk_app_updated}회**",
+    sdk_fields = [
+        ("📲 포그라운드 진입", f"**{sdk_app_opened}회**"),
+        ("🌙 백그라운드 전환", f"**{sdk_app_backgrounded}회**"),
+        ("🆙 앱 업데이트", f"**{sdk_app_updated}회**"),
     ]
+
+    def to_fields(pairs):
+        return [{"name": name, "value": value, "inline": True} for name, value in pairs]
 
     payload = {
         "username": "네키 Amplitude 주간봇",
@@ -243,38 +249,40 @@ def main():
             {
                 "title": f"🗓️ Amplitude 주간 리포트 · {period_display}",
                 "color": 0x5865F2,
-                "description": "\n".join(summary_lines),
+                "fields": to_fields(summary_fields),
                 "footer": {"text": "neki · Amplitude 자동 리포트"},
             },
             {
                 "title": "🗺️ 지도",
                 "color": 0x57F287,
-                "description": "\n".join(map_lines),
+                "fields": to_fields(map_fields),
             },
             {
                 "title": "🤳 포즈",
                 "color": 0xFEE75C,
-                "description": "\n".join(pose_lines),
+                "fields": to_fields(pose_fields),
             },
             {
                 "title": "🗂️ 아카이브",
                 "color": 0xEB459E,
-                "description": "\n".join(archive_lines),
+                "fields": to_fields(archive_fields),
             },
             {
                 "title": "⚙️ 기타 (SDK 자동수집)",
                 "color": 0x99AAB5,
-                "description": "\n".join(sdk_lines),
+                "fields": to_fields(sdk_fields),
             },
         ],
     }
 
     print("--- 전송 내용 (embed) ---")
     for embed in payload["embeds"]:
-        if len(embed["description"]) > 4096:
-            print(
-                f"경고: embed '{embed['title']}' 길이 {len(embed['description'])} > 4096자 제한 초과"
-            )
+        for field in embed["fields"]:
+            if len(field["value"]) > 1024:
+                print(
+                    f"경고: embed '{embed['title']}' field '{field['name']}' "
+                    f"길이 {len(field['value'])} > 1024자 제한 초과"
+                )
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     print("-----------------")
 
