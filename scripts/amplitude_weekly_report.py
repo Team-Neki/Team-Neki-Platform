@@ -240,16 +240,14 @@ def main():
     ]
 
     def to_fields(pairs):
-        # name을 보이지 않는 zero-width space로 두면 디스코드가 이름/값을 세로로
-        # 쌓지 않고, value 한 줄(이모지 라벨 + 값)만 가로로 그리드에 배치한다.
-        # 디스코드는 inline field 폭을 보고 한 줄에 2~3개를 자동으로 정하는데,
-        # 2개마다 빈 필드를 끼워 넣어 한 줄에 정확히 2개씩만 배치되게 강제한다.
-        fields = []
-        for i, (name, value) in enumerate(pairs):
-            fields.append({"name": "​", "value": f"{name} {value}", "inline": True})
-            if i % 2 == 1 and i != len(pairs) - 1:
-                fields.append({"name": "​", "value": "​", "inline": True})
-        return fields
+        # 왼쪽 field에 지표명 전체를, 오른쪽 field에 값 전체를 줄바꿈으로 쌓아서
+        # inline 2개로 나란히 붙이면 같은 줄끼리 정렬된 2열 표처럼 보인다.
+        labels = "\n".join(name for name, _ in pairs)
+        values = "\n".join(value for _, value in pairs)
+        return [
+            {"name": "지표", "value": labels, "inline": True},
+            {"name": "값", "value": values, "inline": True},
+        ]
 
     payload = {
         "username": "네키 Amplitude 주간봇",
