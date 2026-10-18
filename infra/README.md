@@ -99,3 +99,18 @@ prefix 를 `raw/` 로 잡은 것은 AGENTS.md §4 의 토픽 표에서 원본 �
 콘솔에서 전송 스트림을 만들 때 역할 선택 드롭다운은 `iam:ListRoles` 를 요구한다. 이
 정책에는 없다. 콘솔로 끝까지 만들려면 ARN 을 직접 입력하거나 `iam:ListRoles` 를 더해야
 한다. Terraform 으로 만들면 필요 없다.
+
+## 승인 후 GitHub Actions 적용
+
+[ADR-0005](../docs/adr/0005-approved-terraform-apply.md)에 따라 Actions의
+`Terraform approved apply` → Run workflow → main → 모듈 `infra`를 선택한다.
+plan 완료 후 Summary의 리소스 작업과 commit 변경을 확인하고, `koosco`가
+Review deployments → `terraform-apply` → Approve and deploy를 누르면 저장 plan을 적용한다.
+`aggregation/infra`, `raw/infra`도 선택할 수 있다. 변경 없음은 apply를 건너뛴다.
+삭제/교체 plan은 차단한다. main 변경 또는 artifact 만료 시 새 실행이 필요하다.
+로컬 apply와 동시에 실행하지 않는다. 실행 중에는 취소하지 말고 완료를 확인한다.
+
+설정: Environment `terraform-apply`의 required reviewer `koosco`, main 브랜치만 허용,
+관리자 우회 금지. 기존 AWS Secrets와 `TF_VAR_ALERT_EMAIL`, 암호화용 `TF_PLAN_KEY`를 쓴다.
+plan artifact는 암호화하여 1일 보관한다. 키를 회전하면 기존 실행 대신 새로 실행한다.
+환경 설정을 삭제하면 승인 게이트도 사라지므로 유지해야 한다.
