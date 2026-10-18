@@ -1,0 +1,132 @@
+name: Terraform approved apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: Terraform module
+        type: choice
+        required: true
+        options: [infra, aggregation/infra, raw/infra]
+
+permissions:
+  contents: read
+  actions: read
+
+# state lock이 없으므로 승인 대기를 포함해 모든 모듈을 직렬화한다.
+concurrency:
+  group: terraform-deployment
+  cancel-in-progress: false
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  MODULE: ${{ inputs.module }}
+
+jobs:
+  plan:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      changes: ${{ steps.plan.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify approval protection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/environments/terraform-apply" > "$RUNNER_TEMP/environment.json"
+          jq -e '.can_admins_bypass == false and any(.protection_rules[]; .type == "required_reviewers" and (.reviewers | length) == 1 and .reviewers[0].reviewer.login == "koosco") and .deployment_branch_policy.custom_branch_policies == true' "$RUNNER_TEMP/environment.json" > /dev/null
+          gh api "repos/$GITHUB_REPOSITORY/environments/terraform-apply/deployment-branch-policies" | jq -e '.branch_policies | length == 1 and .[0].name == "main" and .[0].type == "branch"' > /dev/null
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+          terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - name: Plan and publish resource actions
+        id: plan
+        shell: bash
+        env:
+          TF_VAR_alert_email: ${{ secrets.TF_VAR_ALERT_EMAIL }}
+          TF_PLAN_KEY: ${{ secrets.TF_PLAN_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$TF_PLAN_KEY"
+          case "$MODULE" in infra|aggregation/infra|raw/infra) ;; *) exit 1 ;; esac
+          terraform -chdir="$MODULE" fmt -check -recursive
+          terraform -chdir="$MODULE" init -input=false > /dev/null 2>&1
+          terraform -chdir="$MODULE" validate -no-color
+          # plan/stateには秘密情報が含まれる。生ログとJSONを公開しない。
+          terraform -chdir="$MODULE" plan -out=tfplan -no-color > "$RUNNER_TEMP/plan.log" 2>&1
+          terraform -chdir="$MODULE" show -json tfplan > "$RUNNER_TEMP/plan.json"
+          jq -e '[.resource_changes[]? | select(.change.actions | index("delete"))] | length == 0' "$RUNNER_TEMP/plan.json" > /dev/null
+          count=$(jq '[.resource_changes[]? | select(.change.actions != ["no-op"])] | length' "$RUNNER_TEMP/plan.json")
+          echo "changes=$count" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Terraform: $MODULE"
+            echo "Commit: $GITHUB_SHA"
+            echo "Changes: $count (delete/replacement forbidden)"
+            echo '```text'
+            jq -r '.resource_changes[]? | select(.change.actions != ["no-op"]) | "\(.address): \(.change.actions | join(", "))"' "$RUNNER_TEMP/plan.json"
+            echo '```'
+            echo 'Review the configuration diff at this commit before approving terraform-apply.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in "$MODULE/tfplan" -out "$RUNNER_TEMP/tfplan.enc" -pass env:TF_PLAN_KEY
+      - uses: actions/upload-artifact@v4
+        if: steps.plan.outputs.changes != '0'
+        with:
+          name: terraform-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/tfplan.enc
+          retention-days: 1
+          if-no-files-found: error
+
+  apply:
+    needs: plan
+    if: needs.plan.outputs.changes != '0'
+    environment: terraform-apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reject outdated commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+          terraform_wrapper: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/approved-plan
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - name: Apply the saved plan
+        env:
+          TF_PLAN_KEY: ${{ secrets.TF_PLAN_KEY }}
+        run: |
+          set -euo pipefail
+          openssl enc -d -aes-256-cbc -pbkdf2 -in "$RUNNER_TEMP/approved-plan/tfplan.enc" -out "$MODULE/tfplan" -pass env:TF_PLAN_KEY
+          terraform -chdir="$MODULE" init -input=false > /dev/null 2>&1
+          # 다시 plan하지 않고 승인된 저장 plan만 적용하며 생출력은 공개하지 않는다.
+          if terraform -chdir="$MODULE" apply -input=false tfplan > "$RUNNER_TEMP/apply.log" 2>&1; then
+            echo "Terraform apply succeeded: $MODULE ($GITHUB_SHA)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Terraform apply failed. Inspect AWS/state locally; do not rerun apply blindly.' >&2
+            exit 1
+          fi

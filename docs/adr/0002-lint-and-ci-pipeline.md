@@ -3,6 +3,8 @@
 ## Status
 Accepted (2026-05-26)
 
+2026-10-19: 수동 배포 workflow의 plan/apply는 [ADR-0005](0005-approved-terraform-apply.md)로 대체. PR CI 결정은 유지.
+
 ## Context and Problem Statement
 
 Team-Neki-Platform는 단일 운영자(AGENTS.md §5)가 관리하는 작은 레포지만, **AI 에이전트(Claude Code, Codex 등)도 1급 기여자**로 가정한다(AGENTS.md 1줄 요약). 이 가정 위에서 다음 두 가지가 동시에 사실이다.
