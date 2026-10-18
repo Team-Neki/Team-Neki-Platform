@@ -37,10 +37,21 @@
 apply 가 설정을 새로 거는 변경이 된다. 없는 것을 없다고 쓰는 방법이 Terraform 에
 없다.
 
-lifecycle 은 미디어 버킷 두 개에만 있다. Server 가 `qr-dumps/` 에 올리는 QR 파싱
-실패 HTML 덤프를 30일 뒤 지운다(BACKEND-167). 이 리소스가 버킷의 lifecycle 설정
-전체를 소유하므로, 규칙은 콘솔이 아니라 `s3.tf` 에 rule 블록으로 더한다. 콘솔에서
-더한 규칙은 다음 apply 가 지운다.
+lifecycle 은 다음 경로에 적용한다. 보관 기간은 객체 생성일 기준이며, 기존 객체에도
+적용한다. Workflow `collect/` 아래의 CSV 와 `_raw/` 응답 원문을 모두 포함한다.
+
+| 버킷 | 경로 | 만료 기간 |
+|---|---|---|
+| `yapp-neki-ap-northeast-2` | `qr-dumps/` | 30일 |
+| `yapp-neki-staging-ap-northeast-2` | `qr-dumps/` | 30일 |
+| `staging-team-neki-workflow` | `collect/` | 3일 |
+| `prod-team-neki-workflow` | `collect/` | 7일 |
+
+`qr-dumps/` 는 Server 의 QR 파싱 실패 HTML 덤프다(BACKEND-167).
+각 lifecycle 리소스가 버킷의 lifecycle 설정 전체를 소유하므로, 규칙은 콘솔이 아니라
+`s3.tf` 에 rule 블록으로 더한다. 콘솔에서 더한 규칙은 다음 apply 가 지운다.
+Workflow 소비자의 manifest 조회는 7일 이내 사이클을 대체 후보로 사용하므로,
+staging 에서는 manifest 가 가리키는 객체가 먼저 만료될 수 있다.
 
 `aggregation/infra` 가 관리하는 `team-neki-log-production` 은 여기 없다. 그쪽
 state 소관이다.

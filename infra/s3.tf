@@ -4,7 +4,7 @@
 #
 # 공통은 전부 같다. SSE-S3(AES256), public access block 4개 전부 차단, 버킷 정책
 # 없음, 버저닝 미설정. 다른 것은 CORS 와 ownership, 태그, bucket key 뿐이라 맵에
-# 그것만 담는다. lifecycle 은 미디어 버킷 두 개의 qr-dumps/ 만료 규칙뿐이다 (맨 아래).
+# 그것만 담는다. lifecycle 은 아래에서 미디어 qr-dumps/ 와 Workflow collect/ 를 관리한다.
 #
 # 버저닝은 선언하지 않는다. 실물이 미설정 상태라 Disabled 로 선언하면 apply 가
 # 설정을 새로 거는 변경이 된다. 없는 것을 없다고 쓰는 방법이 Terraform 에는 없다.
@@ -138,6 +138,29 @@ resource "aws_s3_bucket_lifecycle_configuration" "media" {
 
     expiration {
       days = 30
+    }
+  }
+}
+
+# Workflow 수집 CSV 와 _raw 응답 원문을 객체 생성일 기준으로 만료한다.
+resource "aws_s3_bucket_lifecycle_configuration" "workflow" {
+  for_each = {
+    "staging-team-neki-workflow" = 3
+    "prod-team-neki-workflow"    = 7
+  }
+
+  bucket = aws_s3_bucket.imported[each.key].id
+
+  rule {
+    id     = "expire-collect"
+    status = "Enabled"
+
+    filter {
+      prefix = "collect/"
+    }
+
+    expiration {
+      days = each.value
     }
   }
 }
