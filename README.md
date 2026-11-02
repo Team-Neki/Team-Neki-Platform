@@ -34,7 +34,7 @@ Team-Neki-Server (userId·platform·receivedAt 부착, 요청 단위로 묶음)
 Firehose  team-neki-log-raw-<env>-client-log (버퍼 5MiB / 300초, GZIP)
    ↓ PutObject (환경별 전송 역할, 자기 버킷의 raw/ 만 쓰기)
 S3  team-neki-log-production | team-neki-log-staging
-    └── raw/client-log/year=YYYY/month=MM/day=DD/*.gz   (UTC 도착 시각)
+    └── raw/client-log/year=YYYY/month=MM/day=DD/*.gz   (KST 도착 날짜)
 ```
 
 스택: Python 3.13 · Terraform · AWS (API Gateway HTTP API, Lambda arm64, Kinesis Data Firehose, S3, IAM, CloudWatch Logs, Budgets) · 단일 계정 / 단일 리전 / 단일 환경 (prod). 예외: raw 의 staging 스트림·버킷 (ADR-0004).

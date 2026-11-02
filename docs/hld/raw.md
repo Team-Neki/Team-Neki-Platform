@@ -11,7 +11,7 @@
 - 책임 : 인증과 줄 구성은 Server, 버퍼링과 S3 객체 생성은 Firehose, 스트림·버킷·전송 역할 정의는 이 레포
 - 이 레포에 raw 실행 코드는 없음. Terraform 리소스만 있음 (`raw/infra`, `infra`)
 - 변경하지 않는 것 : aggregation 의 경로·Lambda·IAM, 운영 버킷 설정
-- 핵심 결정 : Firehose Direct PUT, 요청 단위 레코드 묶음, 환경별 버킷 분리, UTC 도착 시각 파티션
+- 핵심 결정 : Firehose Direct PUT, 요청 단위 레코드 묶음, 환경별 버킷 분리, KST 도착 시각 파티션
 - 미결 : 중복 줄을 거르는 위치, 로그 개인정보 규칙, 전송 실패 알림 (§10)
 
 ## 1. 배경과 범위
@@ -100,7 +100,7 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 | 줄을 레코드로 묶기 | | O | | |
 | 환경별 스트림 선택 | | O | | |
 | 버퍼링·압축·S3 객체 생성 | | | O | |
-| 날짜 파티션 부여 (도착 시각 UTC) | | | O | |
+| 날짜 파티션 부여 (도착 시각 KST) | | | O | |
 | S3 전송 재시도와 실패 기록 | | | O | |
 | 스트림 설정값 (버퍼, 압축, 경로) | | | | O `raw/infra` |
 | staging 버킷, 로그 그룹 | | | | O `raw/infra` |
@@ -134,7 +134,7 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 - 줄의 최상위 필드(`userId`, `platform`, `receivedAt`)는 Server 만 씁니다. 앱이 보낸 JSON 은 `log` 아래에만 둡니다.
 - S3 의 한 줄은 앱 로그 1건입니다. 레코드 묶음은 과금 단위만 바꾸고 저장 결과는 바꾸지 않습니다 (모든 줄이 개행으로 끝남).
 - 로그 그룹 이름은 `/aws/kinesisfirehose/team-neki-log-*` 안에 둡니다. 밖에 두면 전송 실패가 기록되지 않고 사라집니다.
-- raw 의 `day=` 는 Firehose 도착 날짜(UTC)입니다. aggregation 의 `day=`(KST `report_date`)와 키 이름은 같지만 의미가 다릅니다.
+- raw 의 `day=` 는 Firehose 도착 날짜(KST)입니다. aggregation 의 `day=`(KST `report_date`)와 시간대는 같지만, 도착 날짜라 발생 날짜와는 다를 수 있습니다. 줄 안의 `receivedAt` 은 UTC 입니다.
 - raw 는 aggregation 과 Terraform state, 경로, IAM 역할을 공유하지 않습니다. 공유하는 것은 운영 버킷뿐입니다.
 - 이 레포는 raw 실행 코드를 두지 않습니다. 변환 단계가 필요해지면 ADR 부터 다시 봅니다.
 
@@ -144,7 +144,7 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 |---|---|---|
 | `POST /api/logs` 응답 | 이 로그 배치를 Firehose 가 받았는가 | Server |
 | `PutRecordBatch` 응답 (`FailedPutCount`) | 레코드가 스트림에 들어갔는가 | Firehose |
-| S3 경로 `raw/client-log/year=/month=/day=/` | 어느 날(UTC) 도착한 줄인가 | 이 레포 |
+| S3 경로 `raw/client-log/year=/month=/day=/` | 어느 날(KST) 도착한 줄인가 | 이 레포 |
 | Terraform output `client_log_stream_names` | Server 는 어느 스트림에 넣어야 하는가 | 이 레포, Server 설정이 따라감 |
 
 **`POST /api/logs` 의 성공 응답은 Firehose 가 레코드를 받았다는 뜻이지 S3 에 적재됐다는 뜻이 아닙니다.** S3 적재는 응답 뒤에 비동기로 일어나며, 실패해도 앱에는 알려지지 않습니다 (§7).
@@ -157,7 +157,7 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 4. 레코드 묶기 (Server) : 줄 순서를 지키며 이어 붙이고, 1,000KiB 를 넘기 전에 다음 레코드로 나눔
 5. 접수 (Firehose) : `PutRecordBatch`. 전체 실패나 부분 실패는 `D-15`
 6. 버퍼링 (Firehose) : 5MiB 또는 300초 중 먼저 닿는 쪽에서 비움. 트래픽이 작아 대부분 300초
-7. 적재 (Firehose) : GZIP 압축 후 도착 시각(UTC) 경로에 `PutObject`
+7. 적재 (Firehose) : GZIP 압축 후 도착 시각(KST) 경로에 `PutObject`
 
 1~5 는 요청 안에서 동기로, 6~7 은 응답 뒤에 비동기로 일어납니다. 따라서 앱이 성공 응답을 받은 뒤 S3 에서 줄이 보이기까지 버퍼 간격(최대 300초)과 전송 시간이 걸립니다.
 
@@ -192,13 +192,13 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 - Trade-off : 단일 환경 원칙과 이름 규칙의 첫 예외. 버킷·역할·스트림이 한 벌씩 늘고, 버킷 소관이 `aggregation/infra`(운영)와 `raw/infra`(staging)로 나뉨
 - Consequence : 유휴 비용은 0 이고, staging 도 운영과 같은 경로 구조를 가짐
 
-### DEC-4. 날짜 파티션 : Firehose 도착 시각(UTC)
+### DEC-4. 날짜 파티션 : Firehose 도착 시각(KST)
 
-- Context : aggregation 은 KST `report_date` 로 파티션함
-- Decision : Firehose 기본 timestamp prefix (`year=/month=/day=`, 도착 시각 UTC)를 씀
-- Alternatives : dynamic partitioning 으로 KST 나 로그 필드 기준 파티션
-- Why : 추가 비용이 없음. dynamic partitioning 은 GB 당 $0.027 와 객체 1,000개당 $0.0066 이 붙음
-- Trade-off : KST 하루치를 읽으려면 UTC 이틀치를 읽어야 함. 발생 시각이 아니라 도착 시각이라, 앱이 늦게 보낸 로그는 늦은 날짜에 들어감
+- Context : aggregation 은 KST `report_date` 로 파티션하고, 팀 S3 규약도 KST 파티션임
+- Decision : Firehose timestamp prefix (`year=/month=/day=`)에 `custom_time_zone = "Asia/Seoul"` 을 씀. 적재 경로와 실패 경로 모두 적용됨
+- Alternatives : 기본 시간대(UTC) / dynamic partitioning 으로 로그 필드 기준 파티션
+- Why : 추가 비용이 없음 (`custom_time_zone` 은 dynamic partitioning 이 아님). UTC 로 끊으면 KST 하루치가 이틀 폴더에 걸침. dynamic partitioning 은 GB 당 $0.027 와 객체 1,000개당 $0.0066 이 붙음
+- Trade-off : 발생 시각이 아니라 도착 시각이라, 앱이 늦게 보낸 로그는 늦은 날짜에 들어감. 이 설정을 적용하기 전에 쌓인 staging 객체는 UTC 날짜 폴더에 남아 있음
 - Consequence : 정확한 일자가 필요한 소비자는 `receivedAt` 이나 `log` 안의 값으로 다시 걸러야 함
 
 ### DEC-5. 포맷 : NDJSON + GZIP, 변환 없음
