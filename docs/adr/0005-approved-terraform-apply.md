@@ -20,6 +20,7 @@ Accepted (2026-10-19), 사용자 요청. ADR-0002의 Actions plan 금지는 수�
 - 사용자는 Actions summary와 해당 commit의 코드 변경을 확인한 뒤 Review deployments에서 승인/거절한다.
 - 변경 없음은 승인을 요청하지 않는다. artifact 만료/실패 시 새 실행으로 plan부터 진행한다.
 - AWS 자격증명은 기존과 같은 repository secret이므로 다른 workflow에서도 사용 가능하다. Environment 승인은 이 workflow의 apply job을 보호하며 계정 전체의 IAM 경계는 아니다.
+- `workflow_dispatch`는 선택한 ref의 workflow 파일로 실행된다. 쓰기 권한자는 브랜치에서 main 조건을 지운 workflow로 plan job의 repository secret(AWS 자격증명, `TF_PLAN_KEY`)을 쓸 수 있다. 이는 쓰기 권한자가 어떤 브랜치 workflow로든 repository secret을 쓸 수 있는 기존 경계와 같으며, 이 workflow가 넓힌 것은 아니다. 막으려면 secret을 main 전용 Environment secret으로 옮기거나 OIDC 역할로 분리한다(위 후속 결정).
 - 원시 실패 로그는 공개하지 않으므로 장애 원인은 로컬 plan 및 AWS/state 확인이 필요하다.
 - GitHub-hosted runner 분 사용 외 AWS 신규 고정 비용은 없다.
 
