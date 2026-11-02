@@ -39,7 +39,8 @@ resource "aws_kinesis_firehose_delivery_stream" "client_log" {
     bucket_arn = each.value.bucket_arn
 
     # 두 prefix 모두 raw/ 아래여야 한다. 전송 역할이 그 밖에는 쓰지 못한다.
-    # timestamp 는 Firehose 도착 시각이고, custom_time_zone 으로 KST 날짜로 끊는다 (두 prefix 모두 적용).
+    # timestamp 는 S3 객체 안 가장 오래된 레코드의 Firehose 도착 시각이고, custom_time_zone 으로 KST 날짜로 끊는다
+    # (두 prefix 모두 적용). 객체 단위라 KST 자정 직후 버퍼 간격만큼 도착한 줄은 전날 폴더에 들어갈 수 있다.
     # 레코드 안의 시각(receivedAt 등)은 UTC 그대로다. 바뀌는 것은 폴더 날짜뿐이다.
     prefix              = "raw/client-log/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
     error_output_prefix = "raw/client-log-errors/!{firehose:error-output-type}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"

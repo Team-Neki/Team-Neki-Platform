@@ -93,7 +93,7 @@ S3  team-neki-log-production | team-neki-log-staging
 - **경로**: 두 버킷 모두 `raw/client-log/year=YYYY/month=MM/day=DD/`
 - **실패 경로**: `raw/client-log-errors/<error-output-type>/year=YYYY/month=MM/day=DD/`
 - **버킷 설정 (staging)**: Public Access Block, SSE-S3, Versioning 미설정. 운영 버킷과 같음
-- **날짜 기준**: Firehose 도착 시각, KST (`custom_time_zone = "Asia/Seoul"`, 적재 경로와 실패 경로 모두). 레코드 안의 시각은 UTC
+- **날짜 기준**: S3 객체 안 가장 오래된 레코드의 Firehose 도착 시각, KST (`custom_time_zone = "Asia/Seoul"`, 적재 경로와 실패 경로 모두). 객체 단위라 KST 자정 직후 버퍼 간격만큼 도착한 줄은 전날 폴더에 들어갈 수 있음. 레코드 안의 시각은 UTC
 - **포맷**: NDJSON, GZIP
 - **Lifecycle**: 없음 (보관량 재검토 트리거 참고)
 

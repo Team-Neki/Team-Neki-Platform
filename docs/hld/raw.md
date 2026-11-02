@@ -134,7 +134,7 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 - 줄의 최상위 필드(`userId`, `platform`, `receivedAt`)는 Server 만 씁니다. 앱이 보낸 JSON 은 `log` 아래에만 둡니다.
 - S3 의 한 줄은 앱 로그 1건입니다. 레코드 묶음은 과금 단위만 바꾸고 저장 결과는 바꾸지 않습니다 (모든 줄이 개행으로 끝남).
 - 로그 그룹 이름은 `/aws/kinesisfirehose/team-neki-log-*` 안에 둡니다. 밖에 두면 전송 실패가 기록되지 않고 사라집니다.
-- raw 의 `day=` 는 Firehose 도착 날짜(KST)입니다. aggregation 의 `day=`(KST `report_date`)와 시간대는 같지만, 도착 날짜라 발생 날짜와는 다를 수 있습니다. 줄 안의 `receivedAt` 은 UTC 입니다.
+- raw 의 `day=` 는 S3 객체 안 가장 오래된 줄의 Firehose 도착 날짜(KST)입니다. aggregation 의 `day=`(KST `report_date`)와 시간대는 같지만 두 가지가 다릅니다. 첫째, 날짜를 객체 단위로 정하므로 KST 자정 직후 버퍼 간격(`buffering_interval`)만큼 도착한 줄은 전날 폴더에 있을 수 있습니다. 둘째, 도착 날짜라 발생 날짜와 다를 수 있습니다. 따라서 일 단위 집계를 만드는 소비자는 앞뒤 날짜 폴더까지 읽고 줄 안의 시각으로 걸러야 합니다. 줄 안의 `receivedAt` 은 UTC 입니다.
 - raw 는 aggregation 과 Terraform state, 경로, IAM 역할을 공유하지 않습니다. 공유하는 것은 운영 버킷뿐입니다.
 - 이 레포는 raw 실행 코드를 두지 않습니다. 변환 단계가 필요해지면 ADR 부터 다시 봅니다.
 
@@ -144,7 +144,7 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 |---|---|---|
 | `POST /api/logs` 응답 | 이 로그 배치를 Firehose 가 받았는가 | Server |
 | `PutRecordBatch` 응답 (`FailedPutCount`) | 레코드가 스트림에 들어갔는가 | Firehose |
-| S3 경로 `raw/client-log/year=/month=/day=/` | 어느 날(KST) 도착한 줄인가 | 이 레포 |
+| S3 경로 `raw/client-log/year=/month=/day=/` | 객체의 첫 줄이 어느 날(KST) 도착했나 (자정 직후 줄은 전날 폴더일 수 있음) | 이 레포 |
 | Terraform output `client_log_stream_names` | Server 는 어느 스트림에 넣어야 하는가 | 이 레포, Server 설정이 따라감 |
 
 **`POST /api/logs` 의 성공 응답은 Firehose 가 레코드를 받았다는 뜻이지 S3 에 적재됐다는 뜻이 아닙니다.** S3 적재는 응답 뒤에 비동기로 일어나며, 실패해도 앱에는 알려지지 않습니다 (§7).
@@ -157,7 +157,7 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 4. 레코드 묶기 (Server) : 줄 순서를 지키며 이어 붙이고, 1,000KiB 를 넘기 전에 다음 레코드로 나눔
 5. 접수 (Firehose) : `PutRecordBatch`. 전체 실패나 부분 실패는 `D-15`
 6. 버퍼링 (Firehose) : 5MiB 또는 300초 중 먼저 닿는 쪽에서 비움. 트래픽이 작아 대부분 300초
-7. 적재 (Firehose) : GZIP 압축 후 도착 시각(KST) 경로에 `PutObject`
+7. 적재 (Firehose) : GZIP 압축 후 객체 안 가장 오래된 줄의 도착 시각(KST) 경로에 `PutObject`
 
 1~5 는 요청 안에서 동기로, 6~7 은 응답 뒤에 비동기로 일어납니다. 따라서 앱이 성공 응답을 받은 뒤 S3 에서 줄이 보이기까지 버퍼 간격(최대 300초)과 전송 시간이 걸립니다.
 
@@ -270,7 +270,7 @@ Server 는 실행 환경에 맞는 스트림 하나에만 씁니다 (`aws.fireho
 - 개인정보 유입 : 로그가 자유 JSON 이라 앱이 이메일·토큰을 넣어도 막지 못함. 앱 측 규칙에 의존
 - 중복 줄 : at-least-once 재전송으로 생김 (DEC-2, §7)
 - 조용한 유실 : S3 전송 장애가 24시간을 넘기면 알림 없이 유실될 수 있음
-- 날짜 의미 혼동 : raw 와 aggregation 이 같은 `day=` 키를 다른 시간대로 씀
+- 날짜 경계 어긋남 : raw 의 `day=` 는 객체의 첫 줄 도착 날짜라, 자정 직후 버퍼 간격만큼의 줄과 늦게 보낸 로그가 다른 날짜 폴더에 있음. aggregation 의 `report_date` 와 같은 날짜로 읽으면 일 단위 수치가 어긋남
 - 버킷 소관 분할 : 운영 버킷 설정은 aggregation state, staging 버킷 설정은 raw state 에서 바꿔야 함
 - 보관량 증가 : Lifecycle 이 없어 계속 늘어남
 
