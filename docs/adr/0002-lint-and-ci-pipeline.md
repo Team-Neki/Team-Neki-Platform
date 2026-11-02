@@ -3,6 +3,8 @@
 ## Status
 Accepted (2026-05-26)
 
+2026-10-19: 수동 배포 workflow의 plan/apply는 [ADR-0005](0005-approved-terraform-apply.md)로 대체. PR CI 결정은 유지.
+
 ## Context and Problem Statement
 
 Team-Neki-Platform는 단일 운영자(AGENTS.md §5)가 관리하는 작은 레포지만, **AI 에이전트(Claude Code, Codex 등)도 1급 기여자**로 가정한다(AGENTS.md 1줄 요약). 이 가정 위에서 다음 두 가지가 동시에 사실이다.
@@ -109,7 +111,7 @@ Team-Neki-Platform는 단일 운영자(AGENTS.md §5)가 관리하는 작은 레
 - PR 작성자가 최종 책임 (AGENTS.md §7 자체 변경 없음)
 
 ### `terraform plan`은 CI에 넣지 않는다
-AGENTS.md §7과의 정합성 유지. AWS credentials를 GitHub Actions에 주입하지 않는다(보안 표면 최소화). plan은 로컬 → PR 본문 첨부 운영 그대로.
+AGENTS.md §7과의 정합성 유지. PR 검증 CI에는 AWS credentials를 주입하지 않는다(보안 표면 최소화). plan은 로컬 → PR 본문 첨부 운영 그대로. 수동 배포 workflow의 AWS Secrets 사용은 [ADR-0005](0005-approved-terraform-apply.md)를 따른다.
 
 ## Consequences
 

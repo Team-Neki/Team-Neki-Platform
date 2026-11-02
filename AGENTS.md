@@ -94,7 +94,7 @@ Lambda, IAM role, 로그 그룹도 이름을 바꾸면 교체된다. 옮기려�
 2. **구현 중**: 토픽 경계를 넘지 마라 (aggregation 작업 중 raw 코드를 미리 만들지 않음)
 3. **린트**: `ruff check .` + `ruff format --check .` 통과. 에이전트 편집은 `.claude/hooks/ruff-on-edit.sh`가 자동 정리하지만 최종 책임은 PR 작성자
 4. **테스트**: `aggregation/tests/`의 pytest 통과 + 변경된 검증 규칙은 fixture 추가
-5. **Infra 변경**: `terraform fmt -recursive` + `terraform validate` 후 `terraform plan`을 로컬에서 돌려 결과를 PR 본문에 붙인다. `apply`는 사람이 명시 승인 후
+5. **Infra 변경**: `terraform fmt -recursive` + `terraform validate` 후 `terraform plan`을 로컬에서 돌려 결과를 PR 본문에 붙인다. `apply`는 사람이 명시 승인 후. Actions 수동 배포/승인 절차는 ADR-0005와 `infra/README.md` 참조
 6. **CI**: `.github/workflows/ci.yml`이 위 3·4·5를 PR에서 다시 돌린다. 이게 머지 게이트다 — 로컬 통과로 끝나지 마라
 7. **커밋**: `docs/spec/commit-convention.md` 그대로. `Refs:` 빠뜨리지 마라
 8. **PR**: `.github/PULL_REQUEST_TEMPLATE.md`의 모든 섹션을 채운다. "없음"으로 비울 수는 있지만 섹션 자체를 지우지 마라
