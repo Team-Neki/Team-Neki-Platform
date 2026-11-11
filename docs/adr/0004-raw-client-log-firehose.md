@@ -3,6 +3,8 @@
 ## Status
 Proposed (2026-10-04)
 
+2026-11-03 : 날짜 파티션 시간대를 UTC 에서 KST 로 바꿈 (BACKEND-268). 처음 비교는 KST 파티션에 dynamic partitioning 이 필요하다고 봤지만, `custom_time_zone` 은 추가 비용 없이 prefix 의 시간대만 바꿈
+
 ## Context and Problem Statement
 
 iOS·Android 앱 로그를 영구 저장할 필요가 생겼습니다. Server(Team-Neki-Server)는 `POST /api/logs` 로 앱 로그를 배치로 받아 사용자 인증(JWT)을 마친 뒤 Kinesis Firehose 로 넘깁니다 (Sprint BACKEND-166, Team-Neki-Server#334). Firehose 를 S3 로 잇는 전송 역할과 yapp 의 스트림 구성 권한은 BACKEND-125 에서 만들었지만, 전송 스트림은 아직 없습니다.
@@ -67,8 +69,9 @@ AGENTS.md 는 단일 환경(prod)을 전제로 하지만, Server 는 staging 에
 - Parquet 변환: Glue 스키마가 필요하고 GB 당 $0.022 가 추가됩니다. 스키마가 정해지면 다시 봅니다.
 
 ### 파티션
-- **Firehose 기본 timestamp prefix ★ 선택**: 도착 시각(UTC) 기준 `year=/month=/day=`. 추가 비용이 없습니다.
-- Dynamic partitioning (KST 기준이나 필드 기준): GB 당 $0.027 와 객체 1,000개당 $0.0066 이 붙습니다. aggregation 의 KST 일자 규칙과 맞추는 이점보다 비용이 큽니다.
+- **Firehose timestamp prefix + `custom_time_zone = "Asia/Seoul"` ★ 선택**: 도착 시각을 KST 날짜로 끊어 `year=/month=/day=` 를 만듭니다. 추가 비용이 없고, 팀 S3 규약(KST 파티션)과 aggregation 의 KST 일자 규칙에 맞습니다. 레코드 안의 시각(`receivedAt` 등)은 UTC 그대로입니다.
+- Firehose timestamp prefix, 기본 시간대(UTC): 추가 비용은 같지만 KST 하루치가 UTC 이틀 폴더에 걸쳐 들어갑니다 (`day=02` 에 KST 10/2 09:00 ~ 10/3 08:59).
+- Dynamic partitioning (로그 필드 기준): GB 당 $0.027 와 객체 1,000개당 $0.0066 이 붙습니다. 발생 시각 기준 파티션이 필요해지기 전까지는 쓰지 않습니다.
 
 ## Decision
 
@@ -90,7 +93,7 @@ S3  team-neki-log-production | team-neki-log-staging
 - **경로**: 두 버킷 모두 `raw/client-log/year=YYYY/month=MM/day=DD/`
 - **실패 경로**: `raw/client-log-errors/<error-output-type>/year=YYYY/month=MM/day=DD/`
 - **버킷 설정 (staging)**: Public Access Block, SSE-S3, Versioning 미설정. 운영 버킷과 같음
-- **날짜 기준**: Firehose 도착 시각, UTC (aggregation 의 KST 와 다름)
+- **날짜 기준**: S3 객체 안 가장 오래된 레코드의 Firehose 도착 시각, KST (`custom_time_zone = "Asia/Seoul"`, 적재 경로와 실패 경로 모두). 객체 단위라 KST 자정 직후 버퍼 간격만큼 도착한 줄은 전날 폴더에 들어갈 수 있음. 레코드 안의 시각은 UTC
 - **포맷**: NDJSON, GZIP
 - **Lifecycle**: 없음 (보관량 재검토 트리거 참고)
 
@@ -139,7 +142,7 @@ S3  team-neki-log-production | team-neki-log-staging
 ### Negative / Risks
 - 단일 환경 원칙의 첫 예외 (raw 의 staging 버킷·역할·스트림)
 - 운영 버킷은 aggregation/infra, staging 버킷은 raw/infra 가 관리해 버킷 소관이 둘로 나뉨
-- 날짜 파티션이 UTC 라 KST 일자 조회 시 앞뒤 날짜를 함께 읽어야 함
+- 날짜 파티션이 발생 시각이 아니라 도착 시각(KST) 기준이라, 앱이 늦게 보낸 로그는 늦은 날짜에 들어감
 - 로그 원소가 자유 JSON 이라 앱이 개인정보(이메일, 토큰 등)를 넣어도 막지 못함. 앱 측 규칙으로 관리
 - Server 의 재전송(at-least-once)으로 중복 줄이 생길 수 있음
 - Lifecycle 이 없어 보관량이 계속 늘어남
@@ -149,7 +152,7 @@ S3  team-neki-log-production | team-neki-log-staging
 - **로그에 개인정보 포함 필요** → 접근 통제·보관 기간 정책을 별도 ADR 로
 - **raw/ 보관량 100GB 초과** → Lifecycle (운영 버킷은 aggregation state, staging 버킷은 raw state 에서)
 - **분석 스키마 확정** → Parquet 변환 재검토
-- **KST 일자 파티션 필요** → dynamic partitioning 비용과 비교
+- **발생 시각 기준 파티션 필요** → dynamic partitioning 비용과 비교
 
 ## References
 - ADR-0001 (저장소 S3, "raw 도입 시 별도 인프라 + raw/ prefix")

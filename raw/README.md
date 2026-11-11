@@ -11,7 +11,7 @@
 | `team-neki-log-staging` | staging 적재 버킷. 운영 버킷 `team-neki-log-production` 은 aggregation/infra 소관 |
 | `/aws/kinesisfirehose/<스트림 이름>` | 전송 실패 로그, 14일 보관 |
 
-적재 경로는 환경별 버킷의 `raw/client-log/year=YYYY/month=MM/day=DD/` 입니다 (UTC 도착 시각, GZIP NDJSON).
+적재 경로는 환경별 버킷의 `raw/client-log/year=YYYY/month=MM/day=DD/` 입니다 (KST 도착 날짜, GZIP NDJSON. 줄 안의 시각은 UTC).
 
 전송 역할은 `infra` 루트 모듈 소관이라 여기서는 이름으로 ARN 을 조합해 쓰기만 합니다. plan 은 언제든 돌지만, apply 는 `infra` 가 먼저입니다 (역할이 없으면 스트림 생성이 실패합니다).
 
